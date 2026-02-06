@@ -1,7 +1,5 @@
 # LIT — Live Identity in Transaction
 
-**By WinMagic — creators of the Live Key Engine (LKE) and the Secure Internet**
-
 LIT is an **open specification** for a **continuous, cryptographic identity signal** delivered at the **transaction level**, with **zero user interaction**.
 
 - **LIT (Live Identity in Transaction):** An identity signal bound to a verified human and a verified endpoint, emitted continuously for each transaction.
@@ -15,7 +13,6 @@ This repository contains:
 
 > **Goal:** Enable an Internet where each transaction carries **verifiable, policy‑bound identity**—without prompts, passwords, or fragile tokens.
 
----
 
 ## Why LIT?
 
@@ -29,8 +26,6 @@ Authentication today is dominated by **logins**, **tokens**, and **cookies**—m
 
 LIT is **produced by LKE on the endpoint** and **consumed by apps, services, and infrastructure** to verify identity at the moment of use.
 
----
-
 ## Quick Start
 
 > **Coming soon:** reference client/server and verification SDKs.
@@ -42,16 +37,12 @@ LIT is **produced by LKE on the endpoint** and **consumed by apps, services, and
 5. Check **Security Considerations**: SPEC/LIT-Security-Considerations.md
 6. Look at **Interop and Transport** options: SPEC/LIT-Interop-and-Transport.md
 
----
-
 ## Contributing
 
 We welcome contributions to the **specification**, **examples**, **SDKs**, and **documentation**. Please see:
 - CONTRIBUTING.md
 - CODE_OF_CONDUCT.md
 - GOVERNANCE.md
-
----
 
 ## Security
 
