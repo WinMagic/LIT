@@ -1,5 +1,5 @@
-# LIT
-LIT (Live Identity in Transaction) is a framework designed to provide real‑time identity awareness, verification, and risk evaluation during digital transactions. It enables systems to make informed, context‑aware decisions at the moment a transaction is initiated, helping organizations strengthen security, improve user trust, and reduce fraud.
+# Live Identity in Transaction
+Live Identity in Transaction (LIT) is a framework designed to provide real‑time identity awareness, verification, and risk evaluation during digital transactions. It enables systems to make informed, context‑aware decisions at the moment a transaction is initiated, helping organizations strengthen security, improve user trust, and reduce fraud.
 
 What LIT Does
 
