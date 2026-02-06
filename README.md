@@ -31,21 +31,6 @@ LIT is **produced by LKE on the endpoint** and **consumed by apps, services, and
 
 ---
 
-## What’s Open vs. Proprietary
-
-**Open here (this repo):**
-- LIT specification (message types, state machine, trust transitions)
-- Live Key public semantics (definition, properties, attestation schema)
-- Reference client/server examples (minimal)
-- SDK stubs for verification
-
-**Proprietary (WinMagic products):**
-- **LKE — Live Key Engine (Endpoint):** Produces and governs Live Key; emits LIT.
-- **Enterprise LIT Server:** Policy engine, validation, risk, admin console.
-- **Secure Internet Gateway:** Certificate-less mTLS and identity-assured routing.
-
----
-
 ## Quick Start
 
 > **Coming soon:** reference client/server and verification SDKs.
@@ -77,24 +62,3 @@ For product vulnerabilities (LKE, Enterprise LIT Server, Secure Internet Gateway
 
 ---
 
-## License
-
-We recommend **Apache 2.0** for this repository. (See `LICENSE`.)
-
----
-
-## Announcement
-
-Read the public announcement below (also usable as a blog or PR intro).
-
-### Introducing the LIT Open Specification Project
-
-A new identity signal for every transaction. **LIT** is an open specification that enables **verifiable, continuous identity** without user interaction, bound to real people and real endpoints.
-
-This repo includes the LIT spec, Live Key public semantics, reference examples, and SDK stubs. The production-grade engines—**LKE (endpoint)**, **Enterprise LIT Server**, and **Secure Internet Gateway**—remain WinMagic products.
-
-**Get involved:** Explore the spec, try the examples (as they land), and contribute feedback or implementations via issues and pull requests.
-
-> **LIT enables Live Identity in every transaction. Let’s build the future together.**
-
----
