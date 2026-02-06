@@ -13,7 +13,6 @@ This repository contains:
 
 > **Goal:** Enable an Internet where each transaction carries **verifiable, policy‑bound identity**—without prompts, passwords, or fragile tokens.
 
-
 ## Why LIT?
 
 Authentication today is dominated by **logins**, **tokens**, and **cookies**—mechanisms not designed for continuous, transaction-level identity. Attackers exploit this gap (token theft, AiTM, session hijack).
