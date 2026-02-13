@@ -1,3 +1,5 @@
+We introduce a new approach that unifies login and session protection by asserting identity assurance at the transaction level. This innovation removes the historical split between authentication and session security, enabling authentication less Zero Trust and dramatically reducing IAM cost and complexity.
+
 # LIT — Live Identity in Transaction
 
 LIT is an **open specification** for a **continuous, cryptographic identity signal** delivered at the **transaction level**, with **zero user interaction**.
