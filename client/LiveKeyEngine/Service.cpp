@@ -1,14 +1,19 @@
-// LiveKeyEngine.cpp : minimal service that logs user logon/logoff
-// Build (x64 Developer Prompt):
-//   cl /O2 /DUNICODE /D_UNICODE LiveKeyEngine.cpp /link Advapi32.lib Wtsapi32.lib
-//
-// Install:
-//   sc.exe create LiveKeyEngine binPath= "C:\path\LiveKeyEngine.exe" start= auto
-//   sc.exe start  LiveKeyEngine
-//
-// Uninstall:
-//   sc.exe stop   LiveKeyEngine
-//   sc.exe delete LiveKeyEngine
+/*
+* Copyright (C) 2026 WinMagic Inc.
+*
+* This file is part of the WinMagic Key Storage Provider..
+*
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* Alternatively, this file may be used under the terms of the WinMagic Inc.
+* Commercial License, which can be found at https://winmagic.com/en/legal/commercial_license/
+*
+* You should have received a copy of the GNU General Public License
+* along with this program. If not, see <http://www.gnu.org/licenses/>.
+*/
 
 #include <windows.h>
 #include <wtsapi32.h>

@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 2024 WinMagic Inc.
+* Copyright (C) 2026 WinMagic Inc.
 *
 * This file is part of the WinMagic Key Storage Provider..
 *

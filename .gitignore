@@ -1,0 +1,5 @@
+# Ignore Visual Studio build output
+x64/
+
+# Ignore Visual Studio workspace folder
+.vs/
