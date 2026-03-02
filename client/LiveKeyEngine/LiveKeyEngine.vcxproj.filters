@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="Service.cpp" />
+    <ClCompile Include="Json.cpp" />
+    <ClCompile Include="RestClient.cpp" />
+    <ClCompile Include="Crypto.cpp" />
+    <ClCompile Include="Utils.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Json.h" />
+    <ClInclude Include="RestClient.h" />
+    <ClInclude Include="Crypto.h" />
+    <ClInclude Include="Utils.h" />
+    <ClInclude Include="..\include\LkePipe.h" />
+    <ClInclude Include="..\include\PipeRequest.h" />
+    <ClInclude Include="..\include\Tlv.h" />
+  </ItemGroup>
+</Project>

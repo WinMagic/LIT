@@ -1,0 +1,5 @@
+LIBRARY wmksp
+EXPORTS
+    GetKeyStorageInterface
+	Register
+	Unregister
