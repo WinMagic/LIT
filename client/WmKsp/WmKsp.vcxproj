@@ -207,7 +207,7 @@
     </Midl>
     <ClCompile>
       <AdditionalIncludeDirectories>C:\Program Files (x86)\Windows Kits\10\Cryptographic Provider Development Kit\Include;..\TSS.MSR.CPP\include;..\include</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>USE_ME_TOKEN;WIN32;NDEBUG;_WINDOWS;_USRDLL;PROVIDER_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>DONT_USE_ME_TOKEN;WIN32;NDEBUG;_WINDOWS;_USRDLL;PROVIDER_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PrecompiledHeader />
       <WarningLevel>Level3</WarningLevel>
