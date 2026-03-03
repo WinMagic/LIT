@@ -89,43 +89,48 @@ This repository contains a **fully working reference project** with **client and
 ## Get Started
 
 - **Read the Manifesto:**  
-  _[Add link to Op‑Ed / Whitepaper]_
+  TBD: add link to Op‑Ed / Whitepaper
 
 - **Review the Standards Drafts:**  
-  _[Add link to IETF submission]_  
-  _[Add link to W3C submission]_
+  TBD: Add link to IETF submission
+  TBD: Add link to W3C submission
 
 - **Explore the Code:**  
-  _[Add link to DIT reference implementation]_  
-  _[Add link to the Live Key Engine service]_  
-  _[Add link to client/server demo]_
+  TBD: Add link to DIT reference implementation
+  TBD: Add link to the Live Key Engine service
+  TBD: Add link to client/server demo
 
 ---
 
 ## Quick Build & Run (Example)
 
-> Adjust these steps to your environment. The reference solution targets Windows (TPM + CNG) for the endpoint service and mTLS demo.
-
 1. **Prereqs**
-   - Windows 10/11 or Windows Server with TPM 2.0 enabled  
-   - Visual Studio (x64) + Windows SDK  
-   - OpenSSL (optional, for test tooling)  
+   Client:
+   - Microsoft Windows 10/11 with TPM 2.0 enabled
+   - Microsoft Visual Studio (Tested with version 2022)   
+   Server:
+   - MS Server with IIS
 
 2. **Build**
-   - Open the solution in Visual Studio  
+   - Open the solution in Visual Studio 
    - Build **Release x64**
 
 3. **Install the Live Key Engine (Service)**
    - Open an elevated Developer Command Prompt  
-   - `sc.exe create LiveKeyEngine binPath= "C:\path\to\LiveKeyEngine.exe" start= auto`  
+   - `sc.exe create LiveKeyEngine binPath= "C:\path\to\LiveKeyEngine.exe" start= auto`
    - `sc.exe start LiveKeyEngine`
 
-4. **Run the Server**
+4. **Install and Register WinMagic CNG Key Storage Provider **
+   - Copy WmKsp.dll to \Windows\System32 directoy
+   - Launch Windows Command Prompt as Administrator
+   - `rundll32 "C:\Windows\System32\WmKsp.dll" Register`
+
+5. **Run the Server**
    - Launch the demo server (listens for mTLS)  
    - Verify it trusts the issuing CA used by Live Key Engine
 
-5. **Run the Client**
-   - The client uses the TPM‑bound key + mTLS to connect  
+6. **Run the Client**
+   - The client uses the TPM‑bound key + mTLS to login to server
    - Observe successful authentication based on Identity Pulse
 
 ---
