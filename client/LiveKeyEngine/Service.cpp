@@ -367,8 +367,6 @@ DWORD ProcessPipeServerMessage(
     PipeRequest request(buffer, byteCount);
     PipeResponse response;
 
-//    WmLog(WmLogLevel::WMLOG_INFO, "ProcessCommMessage:  requestId=0x%x", request.GetRequestId());
-
     switch (request.GetRequestId())
     {
     case LKE_AUTHORIZE_KEY_USAGE:
@@ -515,7 +513,6 @@ DWORD PipeServerThread(LPVOID lpThreadParameter)
 			}
 			else if (dwWaitStatus != WAIT_OBJECT_0 + 1)
 			{
-				//WmLog(WmLogLevel::WMLOG_ERROR, "CommThread: Waiting for client read failed, status=0x%x", dwWaitStatus);
 				continue;
 			}
 
@@ -526,7 +523,6 @@ DWORD PipeServerThread(LPVOID lpThreadParameter)
                 TRUE);
 			if (dwByteCount != dwWritten)
 			{
-				//WmLog(WmLogLevel::WMLOG_ERROR, "CommThread: pipe write failed: %d, %d", dwByteCount, dwWritten);
 				continue;
 			}
 		}
