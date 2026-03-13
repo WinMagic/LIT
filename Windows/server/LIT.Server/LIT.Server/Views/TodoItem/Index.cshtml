@@ -1,0 +1,78 @@
+﻿@model IEnumerable<LIT.ServerMVC.Data.Models.TodoItem>
+
+
+@{
+    ViewData["Title"] = "My Tasks";
+}
+
+<div class="container py-4">
+
+    @if (TempData["Message"] is string successMsg)
+    {
+        <div id="alert-message"
+             class="alert alert-success alert-dismissible fade show shadow-sm"
+             role="alert"
+             style="cursor: pointer;">
+            <i class="bi bi-check-circle-fill me-2"></i>
+            @successMsg
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold">My Tasks</h2>
+        <a class="btn btn-primary px-4" href="/TodoItem/Create">
+            <i class="bi bi-plus-lg"></i> Add Task
+        </a>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="text-center text-muted py-5">
+            <h4>No tasks yet</h4>
+            <p>Create one to get started.</p>
+        </div>
+    }
+    else
+    {
+        <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">
+            @foreach (var item in Model)
+            {
+                <div class="col">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-body">
+                            <h5 class="card-title @(item.IsCompleted ? "text-decoration-line-through text-muted" : "")">
+                                @item.Title
+                            </h5>
+
+                            <p class="card-title @(item.IsCompleted ? "text-decoration-line-through text-muted" : "")">
+                                @item.Description
+                            </p>
+
+                            <span class="badge @(item.IsCompleted ? "bg-success" : "bg-warning text-dark")">
+                                @(item.IsCompleted ? "Completed" : "Pending")
+                            </span>
+                        </div>
+
+                        <div class="card-footer bg-white border-0 d-flex justify-content-between">
+                            <a class="btn btn-outline-primary btn-sm" asp-action="Edit" asp-route-id="@item.Id">Edit</a>
+                            <a class="btn btn-outline-secondary btn-sm" asp-action="Details" asp-route-id="@item.Id">Details</a>
+                            <a class="btn btn-outline-danger btn-sm" asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<script>
+    (function () {
+        const alertEl = document.getElementById('alert-message');
+        if (!alertEl) return;
+        alertEl.addEventListener('click', function (e) {
+            const bsAlert = bootstrap.Alert.getOrCreateInstance(alertEl);
+            bsAlert.close();
+        }, { once: true });
+    })();
+</script>

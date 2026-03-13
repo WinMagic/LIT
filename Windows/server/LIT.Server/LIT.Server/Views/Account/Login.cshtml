@@ -1,0 +1,77 @@
+﻿@using LIT.ServerMVC.Data.Models
+@model LoginViewModel
+
+@{
+    ViewData["Title"] = "Login";
+    var returnUrl = ViewData["ReturnUrl"] as string;
+}
+
+
+<div class="row justify-content-center mt-5">
+    <div class="col-12 col-sm-10 col-md-8 col-lg-6 col-xl-5">
+        <div class="card shadow-sm">
+            <div class="card-body p-4 p-md-5">
+                <h1 class="h4 mb-3 text-center">Login</h1>
+                <p class="text-muted text-center mb-4">Please sign in to continue</p>
+
+                <form asp-action="Login" asp-controller="Account" method="post">
+                    <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="UserName" class="form-label"></label>
+                        <input asp-for="UserName" class="form-control" autocomplete="username" />
+                        <span asp-validation-for="UserName" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Password" class="form-label"></label>
+                        <div class="input-group">
+                            <input asp-for="Password" class="form-control" autocomplete="current-password" />
+                            <button class="btn btn-outline-secondary" type="button" id="togglePassword" aria-label="Show password">
+                                <i class="bi bi-eye" aria-hidden="true"></i>
+                                </button>
+                        </div>
+                        <span asp-validation-for="Password" class="text-danger"></span>
+                    </div>
+
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">Sign in</button>
+
+                        <!-- Separate form to POST ForgotPassword (PRG friendly) -->
+
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts {
+    <!-- Enables client-side validation -->
+
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            const btn = document.getElementById('togglePassword');
+            if (!btn) return;
+            const input = document.getElementById('@Html.IdFor(m => m.Password)');
+            const icon = btn.querySelector('i');
+
+            btn.addEventListener('click', function () {
+                if (!input || !icon) return;
+                const isText = input.type === 'text';
+                input.type = isText ? 'password' : 'text';
+
+                // Toggle icon classes
+                icon.classList.toggle('bi-eye', isText);
+                icon.classList.toggle('bi-eye-slash', !isText);
+
+                // Update accessible label
+                btn.setAttribute('aria-label', isText ? 'Show password' : 'Hide password');
+            });
+        })();
+    </script>
+
+}

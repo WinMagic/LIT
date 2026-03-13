@@ -1,0 +1,48 @@
+﻿@model LIT.ServerMVC.Data.Models.TodoItem
+
+
+
+@{
+    ViewData["Title"] = "Task Details";
+}
+
+<div class="container py-5" style="max-width: 650px;">
+    <div class="card shadow-sm border-0 p-4">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h3 class="fw-bold mb-0">Task Details</h3>
+            <span class="badge @(Model.IsCompleted ? "bg-success" : "bg-warning text-dark")" style="font-size: 1rem;">
+                @(Model.IsCompleted ? "Completed" : "Pending")
+            </span>
+        </div>
+        <hr />
+
+        <div class="mb-3">
+            <h6 class="fw-semibold text-muted mb-1">Title</h6>
+            <p class="fs-5 mb-0">@Model.Title</p>
+        </div>
+
+        <div class="mb-3">
+            <h6 class="fw-semibold text-muted mb-1">Description</h6>
+            <p class="fs-5 mb-0">@Model.Description</p>
+        </div>
+
+        <div class="mb-3">
+            <h6 class="fw-semibold text-muted mb-1">User</h6>
+            <p class="fs-5 mb-0">@Model.User.UserName</p>
+        </div>
+
+        <div class="mb-3">
+            <h6 class="fw-semibold text-muted mb-1">Date Created</h6>
+            <p class="fs-5 mb-0">@Model.DateCreated</p>
+        </div>
+
+        <div class="mt-4 d-flex flex-wrap gap-2">
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-primary">
+                <i class="bi bi-pencil me-1"></i> Edit
+            </a>
+            <a asp-action="Index" class="btn btn-light">
+                <i class="bi bi-arrow-left me-1"></i> Back to List
+            </a>
+        </div>
+    </div>
+</div>
