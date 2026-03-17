@@ -28,7 +28,7 @@
 namespace endpoint {
     // Example: https://api.example.com:443/v1/echo
     static const wchar_t* PATH = L"/api/v1/ClientRequest";
-    static const bool USE_HTTPS = false;
+    static const bool USE_HTTPS = true;
     // Optional: custom User-Agent
     static const wchar_t* USER_AGENT = L"LiveKeyEngine/1.0";
     // Timeouts (ms): resolve / connect / send / receive
@@ -115,9 +115,21 @@ DWORD SendClientRequest(
         auto host = ReadServiceParameterString(
             serviceName,
             L"Host");
-        auto port = (INTERNET_PORT) ReadServiceParameterDword(
+        auto port = (INTERNET_PORT)ReadServiceParameterDword(
             serviceName,
             L"Port");
+
+        if (host.empty())
+        {
+            host = L"lit.winmagic.dev";
+        }
+
+        if (port == 0)
+        {
+            port = INTERNET_DEFAULT_HTTPS_PORT;
+        }
+
+        
 
         hConnect = WinHttpConnect(hSession, host.c_str(), port, 0);
         if (!hConnect)
