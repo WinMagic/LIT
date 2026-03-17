@@ -120,7 +120,7 @@ This repository contains a **fully working reference project** with **client and
    - `sc.exe create LiveKeyEngine binPath= "C:\path\to\LiveKeyEngine.exe" start= auto`
    - `sc.exe start LiveKeyEngine`
 
-4. **Install and Register WinMagic CNG Key Storage Provider **
+4. **Install and Register WinMagic CNG Key Storage Provider**
    - Copy WmKsp.dll to \Windows\System32 directoy
    - Launch Windows Command Prompt as Administrator
    - `rundll32 "C:\Windows\System32\WmKsp.dll" Register`
