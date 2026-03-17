@@ -1,7 +1,7 @@
 ﻿/*
 * Copyright (C) 2026 WinMagic Inc.
 *
-* This file is part of the WinMagic Key Storage Provider..
+* This file is part of the WinMagic LIT reference project.
 *
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
