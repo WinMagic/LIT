@@ -22,8 +22,8 @@ namespace LIT.ServerMVC.Controllers
             var certificate = HttpContext.Connection.ClientCertificate;
             if (certificate != null && !logoutWithCert)
             {
-                var username = await LoginWithCert(certificate);
-                TempData["Message"] = $"User {username} has successfully logged in";
+                var dictionary= await LoginWithCert(certificate);
+                TempData["Message"] = $"User: {dictionary["User"]}, Device: {dictionary["Device"]} has successfully logged in";
                 return RedirectToAction("Index", "TodoItem");
             }
 
@@ -96,7 +96,7 @@ namespace LIT.ServerMVC.Controllers
         }
 
 
-        private async Task<string> LoginWithCert(X509Certificate2 certificate)
+        private async Task<Dictionary<string, string>> LoginWithCert(X509Certificate2 certificate)
         {
             //var model = new LoginViewModel();
             var certSubject = new Certificate();
@@ -142,7 +142,10 @@ namespace LIT.ServerMVC.Controllers
                     throw new Exception("Certificate failed validation");
 
                 await SignInUserAsync(user.UserId.ToString(), user.UserName);
-                return user.UserName;
+                var dictionary = new Dictionary<string, string>();
+                dictionary.Add("User", user.UserName);
+                dictionary.Add("Device", device.DeviceName);
+                return dictionary;
             }
             catch(Exception ex)
             {

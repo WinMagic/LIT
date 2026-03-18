@@ -23,26 +23,37 @@ namespace LIT.ServerMVC.Controllers
                 if (String.IsNullOrEmpty(model.DeviceName) || String.IsNullOrEmpty(model.Username) || String.IsNullOrEmpty(model.PubKey))
                     throw new Exception();
 
-                var password = String.IsNullOrEmpty(model.Password) ? Utils.Generate() : model.Password;
-                var hashedPassword = Utils.HashPassword(password);
+                //var password = String.IsNullOrEmpty(model.Password) ? Utils.Generate() : model.Password;
+                //var hashedPassword = Utils.HashPassword(password);
 
-                //create User
-                var user = new User
+                var user = await dbContext.Users.FirstOrDefaultAsync(u => u.UserName == model.Username);
+                var device = await dbContext.Devices.FirstOrDefaultAsync(d => d.DeviceName == model.DeviceName);
+                if (user == null && device == null)
                 {
-                    UserId = new Guid(),
-                    UserName = model.Username,
-                    Password = hashedPassword
-                };
+                    //create User
+                    user = new User
+                    {
+                        UserId = new Guid(),
+                        UserName = model.Username,
+                        Password = model.Username,
+                    };
 
-                //create Device
-                var device = new Device
+                    //create Device
+                    device = new Device
+                    {
+                        DeviceId = new Guid(),
+                        DeviceName = model.DeviceName
+                    };
+
+                    dbContext.Users.Add(user);
+                    dbContext.Devices.Add(device);
+                }
+                else
                 {
-                    DeviceId = new Guid(),
-                    DeviceName = model.DeviceName
-                };
-
-                dbContext.Users.Add(user);
-                dbContext.Devices.Add(device);
+                    user.UserName = model.Username;
+                    user.Password = model.Password;
+                    device.DeviceName = model.DeviceName;
+                }
                 await dbContext.SaveChangesAsync(cancellationToken);
 
                 var keyRegistration = new KeyRegistration
