@@ -40,21 +40,33 @@ namespace LIT.ServerMVC.Controllers
                 if (String.IsNullOrEmpty(model.DeviceName) || String.IsNullOrEmpty(model.Username) || String.IsNullOrEmpty(model.PubKey))
                     throw new Exception();
 
-                //var password = String.IsNullOrEmpty(model.Password) ? Utils.Generate() : model.Password;
-                //var hashedPassword = Utils.HashPassword(password);
+                var password = String.IsNullOrEmpty(model.Password) ? model.Username : model.Password;
+                var hashedPassword = Utils.HashPassword(password);
 
                 var user = await dbContext.Users.FirstOrDefaultAsync(u => u.UserName == model.Username);
                 var device = await dbContext.Devices.FirstOrDefaultAsync(d => d.DeviceName == model.DeviceName);
-                if (user == null && device == null)
+                if (user == null)
                 {
                     //create User
                     user = new User
                     {
                         UserId = new Guid(),
                         UserName = model.Username,
-                        Password = model.Username,
+                        Password = hashedPassword,
                     };
 
+                    dbContext.Users.Add(user);
+                    await dbContext.SaveChangesAsync(cancellationToken);
+                }
+                //if username exist, update record
+                else
+                {
+                    user.UserName = model.Username;
+                    user.Password = hashedPassword;
+                }
+
+                if(device == null)
+                {
                     //create Device
                     device = new Device
                     {
@@ -62,27 +74,37 @@ namespace LIT.ServerMVC.Controllers
                         DeviceName = model.DeviceName
                     };
 
-                    dbContext.Users.Add(user);
                     dbContext.Devices.Add(device);
+                    await dbContext.SaveChangesAsync(cancellationToken);
+                }
+                //if devicename exist, update record
+                else
+                {
+                    device.DeviceName = model.DeviceName;
+                }
+
+                var keyRegistration = await dbContext.KeyRegistrations.FirstOrDefaultAsync(k => k.UserId == user.UserId && k.DeviceId == device.DeviceId);
+
+                if (keyRegistration != null)
+                {
+                    keyRegistration.PublicKey = Convert.FromBase64String(model.PubKey);
+                    keyRegistration.KeyType = model.KeyType ?? 0;
+                    keyRegistration.KeyUsage = model.KeyUsage;
                 }
                 else
                 {
-                    user.UserName = model.Username;
-                    user.Password = model.Password;
-                    device.DeviceName = model.DeviceName;
+                    var key = new KeyRegistration
+                    {
+                        UserId = user.UserId,
+                        DeviceId = device.DeviceId,
+                        PublicKey = Convert.FromBase64String(model.PubKey),
+                        KeyType = model.KeyType ?? 0,
+                        KeyUsage = model.KeyUsage
+                    };
+
+                    dbContext.KeyRegistrations.Add(key);
                 }
-                await dbContext.SaveChangesAsync(cancellationToken);
 
-                var keyRegistration = new KeyRegistration
-                {
-                    UserId = user.UserId,
-                    DeviceId = device.DeviceId,
-                    PublicKey = Convert.FromBase64String(model.PubKey),
-                    KeyType = model.KeyType ?? 0,
-                    KeyUsage = model.KeyUsage
-                };
-
-                dbContext.KeyRegistrations.Add(keyRegistration);
                 await dbContext.SaveChangesAsync(cancellationToken);
 
                 return new ClientRequestResponseDto
