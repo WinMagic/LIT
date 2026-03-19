@@ -154,6 +154,12 @@ DWORD SendClientRequest(
             LOGE("WinHttpOpenRequest failed, Status=%d", dwStatus);
             break;
         }
+
+        // Tell WinHTTP we will NOT send a client certificate
+        WinHttpSetOption(hRequest, 
+            WINHTTP_OPTION_CLIENT_CERT_CONTEXT, 
+            WINHTTP_NO_CLIENT_CERT_CONTEXT, 0);
+
         // Set headers
         WinHttpAddRequestHeaders(
             hRequest, 
@@ -167,7 +173,7 @@ DWORD SendClientRequest(
             (DWORD)-1, 
             WINHTTP_ADDREQ_FLAG_ADD);
 
-        // Send body
+        // Send the body
         DWORD totalSize = static_cast<DWORD>(request.size());
         BOOL ok = WinHttpSendRequest(hRequest,
             WINHTTP_NO_ADDITIONAL_HEADERS,

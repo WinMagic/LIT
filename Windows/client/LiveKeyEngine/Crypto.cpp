@@ -74,7 +74,11 @@ DWORD FindKey(
                 NCRYPT_SILENT_FLAG);
             if (dwStatus)
             {
-				LOGE("NCryptEnumKeys failed, Status=0x%x", dwStatus);
+				if (dwStatus != NTE_NO_MORE_ITEMS)
+				{
+					LOGE("NCryptEnumKeys failed, Status=0x%x", dwStatus);
+				}
+
 				break;
             }
 

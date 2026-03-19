@@ -259,7 +259,7 @@ DWORD SetupUserLiveKey()
        
         }
 
-        // ---- do work as a logged on user ----
+        // ---- do work on behalf the logged in user ----
         if ( FindKey(LIVE_KEY_NAME) != ERROR_SUCCESS )
         {
             LOGI("User LiveKey doesn't exist, creating...");
@@ -267,6 +267,7 @@ DWORD SetupUserLiveKey()
         }
         else
         {
+            dwStatus = 0;
             LOGI("User LiveKey already exists, exiting...");
         }
         // ---- local work as the user is completed ----
