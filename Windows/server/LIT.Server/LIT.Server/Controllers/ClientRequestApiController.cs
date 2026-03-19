@@ -1,4 +1,21 @@
-﻿using LIT.ServerMVC.Data.Dtos;
+﻿/*
+* Copyright (C) 2026 WinMagic Inc.
+*
+* This file is part of the WinMagic LIT reference project.
+*
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* Alternatively, this file may be used under the terms of the WinMagic Inc.
+* Commercial License, which can be found at https://winmagic.com/en/legal/commercial_license/
+*
+* You should have received a copy of the GNU General Public License
+* along with this program. If not, see <http://www.gnu.org/licenses/>.
+*/
+
+using LIT.ServerMVC.Data.Dtos;
 using LIT.ServerMVC.Data.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -23,26 +40,37 @@ namespace LIT.ServerMVC.Controllers
                 if (String.IsNullOrEmpty(model.DeviceName) || String.IsNullOrEmpty(model.Username) || String.IsNullOrEmpty(model.PubKey))
                     throw new Exception();
 
-                var password = String.IsNullOrEmpty(model.Password) ? Utils.Generate() : model.Password;
-                var hashedPassword = Utils.HashPassword(password);
+                //var password = String.IsNullOrEmpty(model.Password) ? Utils.Generate() : model.Password;
+                //var hashedPassword = Utils.HashPassword(password);
 
-                //create User
-                var user = new User
+                var user = await dbContext.Users.FirstOrDefaultAsync(u => u.UserName == model.Username);
+                var device = await dbContext.Devices.FirstOrDefaultAsync(d => d.DeviceName == model.DeviceName);
+                if (user == null && device == null)
                 {
-                    UserId = new Guid(),
-                    UserName = model.Username,
-                    Password = hashedPassword
-                };
+                    //create User
+                    user = new User
+                    {
+                        UserId = new Guid(),
+                        UserName = model.Username,
+                        Password = model.Username,
+                    };
 
-                //create Device
-                var device = new Device
+                    //create Device
+                    device = new Device
+                    {
+                        DeviceId = new Guid(),
+                        DeviceName = model.DeviceName
+                    };
+
+                    dbContext.Users.Add(user);
+                    dbContext.Devices.Add(device);
+                }
+                else
                 {
-                    DeviceId = new Guid(),
-                    DeviceName = model.DeviceName
-                };
-
-                dbContext.Users.Add(user);
-                dbContext.Devices.Add(device);
+                    user.UserName = model.Username;
+                    user.Password = model.Password;
+                    device.DeviceName = model.DeviceName;
+                }
                 await dbContext.SaveChangesAsync(cancellationToken);
 
                 var keyRegistration = new KeyRegistration
