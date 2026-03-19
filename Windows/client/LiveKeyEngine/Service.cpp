@@ -262,13 +262,13 @@ DWORD SetupUserLiveKey()
         // ---- do work on behalf the logged in user ----
         if ( FindKey(LIVE_KEY_NAME) != ERROR_SUCCESS )
         {
-            LOGI("User LiveKey doesn't exist, creating...");
+            LOGI("User's LiveKey doesn't exist, creating...");
             dwStatus = SetupLiveKey();
         }
         else
         {
             dwStatus = 0;
-            LOGI("User LiveKey already exists, exiting...");
+            LOGI("User's LiveKey already exists, exiting...");
         }
         // ---- local work as the user is completed ----
 
