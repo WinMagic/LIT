@@ -22,6 +22,7 @@
 #include <cassert>
 #include "RestClient.h"
 #include "Utils.h"
+#include "Log.h"
 
 #pragma comment(lib, "winhttp.lib")
 
@@ -100,6 +101,7 @@ DWORD SendClientRequest(
         if (!hSession)
         {
             dwStatus = GetLastError();
+            LOGE("WinHttpOpen failed, Status=%d", dwStatus);
             break;
         }
 
@@ -129,12 +131,11 @@ DWORD SendClientRequest(
             port = INTERNET_DEFAULT_HTTPS_PORT;
         }
 
-        
-
         hConnect = WinHttpConnect(hSession, host.c_str(), port, 0);
         if (!hConnect)
         {
             dwStatus = GetLastError();
+            LOGE("WinHttpConnect failed, Status=%d", dwStatus);
             break;
         }
 
@@ -150,6 +151,7 @@ DWORD SendClientRequest(
         if (!hRequest) 
         {
             dwStatus = GetLastError();
+            LOGE("WinHttpOpenRequest failed, Status=%d", dwStatus);
             break;
         }
         // Set headers
@@ -177,12 +179,14 @@ DWORD SendClientRequest(
         if (!ok) 
         {
             dwStatus = GetLastError();
+            LOGE("WinHttpSendRequest failed, Status=%d", dwStatus);
             break;
         }
 
         if (!WinHttpReceiveResponse(hRequest, nullptr)) 
         {
             dwStatus = GetLastError();
+            LOGE("WinHttpReceiveResponse failed, Status=%d", dwStatus);
             break;
         }
 
@@ -197,6 +201,7 @@ DWORD SendClientRequest(
             WINHTTP_NO_HEADER_INDEX)) 
         {
             dwStatus = GetLastError();
+            LOGE("WinHttpQueryHeaders failed, Status=%d", dwStatus);
             break;
         }
 
@@ -206,6 +211,7 @@ DWORD SendClientRequest(
         {
             // HTTP status
             dwStatus = status;
+            LOGE("WinHttpQueryHeaders failed, WEB Status=%d", dwStatus);
             break;
         }
 

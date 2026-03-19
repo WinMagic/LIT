@@ -6,6 +6,7 @@
     <ClCompile Include="RestClient.cpp" />
     <ClCompile Include="Crypto.cpp" />
     <ClCompile Include="Utils.cpp" />
+    <ClCompile Include="Log.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Json.h" />
@@ -15,5 +16,6 @@
     <ClInclude Include="..\include\LkePipe.h" />
     <ClInclude Include="..\include\PipeRequest.h" />
     <ClInclude Include="..\include\Tlv.h" />
+    <ClInclude Include="Log.h" />
   </ItemGroup>
 </Project>

@@ -133,6 +133,7 @@
   <ItemGroup>
     <ClCompile Include="Crypto.cpp" />
     <ClCompile Include="Json.cpp" />
+    <ClCompile Include="Log.cpp" />
     <ClCompile Include="RestClient.cpp" />
     <ClCompile Include="Service.cpp" />
     <ClCompile Include="Utils.cpp" />
@@ -143,6 +144,7 @@
     <ClInclude Include="..\include\Tlv.h" />
     <ClInclude Include="Crypto.h" />
     <ClInclude Include="Json.h" />
+    <ClInclude Include="Log.h" />
     <ClInclude Include="RestClient.h" />
     <ClInclude Include="Utils.h" />
   </ItemGroup>

@@ -25,6 +25,7 @@
 #include "Utils.h"
 #include "PipeRequest.h"
 #include "LkePipe.h"
+#include "Log.h"
 
 #define MY_ENCODING (X509_ASN_ENCODING | PKCS_7_ASN_ENCODING)
 
@@ -41,16 +42,6 @@ SERVICE_STATUS_HANDLE   gStatusHandle = nullptr;
 HANDLE                  gStopEvent = nullptr;
 HANDLE                  ghPipeServerThread = nullptr;
 
-// Small helper: write to Windows Event Log (Application)
-void LogEvent(WORD type, const wchar_t* msg)
-{
-    HANDLE h = RegisterEventSourceW(nullptr, kServiceName);
-    if (h) {
-        const wchar_t* strings[1] = { msg };
-        ReportEventW(h, type, 0, 0, nullptr, 1, 0, strings, nullptr);
-        DeregisterEventSource(h);
-    }
-}
 
 // Report service status to SCM
 void ReportStatus(DWORD state, DWORD winErr = NO_ERROR, DWORD waitHintMs = 0)
@@ -74,23 +65,23 @@ void ReportStatus(DWORD state, DWORD winErr = NO_ERROR, DWORD waitHintMs = 0)
 }
 
 // Optionally resolve username@domain for a session (best effort)
-void DescribeSessionUser(DWORD sessionId, wchar_t* buf, size_t cchBuf)
+void DescribeSessionUser(DWORD sessionId, char* buf, size_t cchBuf)
 {
-    LPWSTR pUser = nullptr, pDom = nullptr;
+    LPSTR pUser = nullptr, pDom = nullptr;
     DWORD cb = 0;
-    if (WTSQuerySessionInformationW(WTS_CURRENT_SERVER_HANDLE, sessionId, WTSUserName,
+    if (WTSQuerySessionInformationA(WTS_CURRENT_SERVER_HANDLE, sessionId, WTSUserName,
         &pUser, &cb) && pUser && *pUser) {
         DWORD cb2 = 0;
-        if (WTSQuerySessionInformationW(WTS_CURRENT_SERVER_HANDLE, sessionId, WTSDomainName,
+        if (WTSQuerySessionInformationA(WTS_CURRENT_SERVER_HANDLE, sessionId, WTSDomainName,
             &pDom, &cb2) && pDom && *pDom) {
-            StringCchPrintfW(buf, cchBuf, L"%s\\%s", pDom, pUser);
+            sprintf_s(buf, cchBuf, "%s\\%s", pDom, pUser);
         }
         else {
-            StringCchPrintfW(buf, cchBuf, L"%s", pUser);
+            sprintf_s(buf, cchBuf, "%s", pUser);
         }
     }
     else {
-        StringCchPrintfW(buf, cchBuf, L"(unknown)");
+        sprintf_s(buf, cchBuf, "(unknown)");
     }
     if (pUser) WTSFreeMemory(pUser);
     if (pDom)  WTSFreeMemory(pDom);
@@ -108,6 +99,7 @@ DWORD SetupLiveKey()
 			BCRYPT_ECDSA_P256_ALGORITHM);
 		if (dwStatus)
 		{
+            LOGE("CreateKey failed, Status=0x%x", dwStatus);
 			break;
 		}
 		DWORD dwPubKeyBlobSize;
@@ -118,13 +110,15 @@ DWORD SetupLiveKey()
 			&dwPubKeyBlobSize);
 		if (dwStatus)
 		{
-			break;
+            LOGE("GetBCryptPublicKeyBlob failed, Status=0x%x", dwStatus);
+            break;
 		}
 
 		pPubKey = new BYTE[dwPubKeyBlobSize];
 		if (!pPubKey)
 		{
 			dwStatus = ERROR_OUTOFMEMORY;
+            LOGE("No memory!");
 			break;
 		}
 
@@ -134,7 +128,8 @@ DWORD SetupLiveKey()
 			&dwPubKeyBlobSize);
 		if (dwStatus)
 		{
-			break;
+            LOGE("GetBCryptPublicKeyBlob failed, Status=0x%x", dwStatus);
+            break;
 		}
 
 		std::unordered_map<std::string, std::string> m;
@@ -152,6 +147,7 @@ DWORD SetupLiveKey()
 		dwStatus = SendClientRequest(json, respJson);
         if (dwStatus)
         {
+            LOGE("SendClientRequest(RegisterKey) failed, Status=%d", dwStatus);
             break;
         }
 
@@ -160,6 +156,7 @@ DWORD SetupLiveKey()
         if (status != "201")
         {
             dwStatus = ERROR_REQUEST_ABORTED;
+            LOGE("SendClientRequest(RegisterKey) failed, WEB Status=%d", status);
             break;
         }
 
@@ -174,6 +171,7 @@ DWORD SetupLiveKey()
         dwStatus = SendClientRequest(json, respJson);
         if (dwStatus)
         {
+            LOGE("SendClientRequest(GetClientCertificate) failed, Status=%d", dwStatus);
             break;
         }
 
@@ -182,6 +180,7 @@ DWORD SetupLiveKey()
         if (status != "200")    
         {
             dwStatus = ERROR_REQUEST_ABORTED;
+            LOGE("SendClientRequest(GetClientCertificate) failed, WEB Status=%d", status);
             break;
         }
         // The key has been registered successfully
@@ -189,6 +188,7 @@ DWORD SetupLiveKey()
         if (cert_b64.empty())
         {
             dwStatus = STATUS_INVALID_PARAMETER;
+            LOGE("No client certificate in the server reply!");
             break;
         }
 
@@ -196,6 +196,7 @@ DWORD SetupLiveKey()
 		dwStatus = InstallCertificate(cert.data(), (DWORD)cert.size());
         if (dwStatus)
         {
+            LOGE("InstallCertificate failed, Status=0x%x", dwStatus);
             break;
         }
 
@@ -222,6 +223,8 @@ DWORD SetupUserLiveKey()
     DWORD dwStatus = (DWORD) - 1;
     do
     {
+        LOGI("SetupUserLiveKey enter...");
+
         // Impersonate currently logged on user
         DWORD sid = WTSGetActiveConsoleSessionId();
         if (0xFFFFFFFF == sid)
@@ -259,7 +262,12 @@ DWORD SetupUserLiveKey()
         // ---- do work as a logged on user ----
         if ( FindKey(LIVE_KEY_NAME) != ERROR_SUCCESS )
         {
+            LOGI("User LiveKey doesn't exist, creating...");
             dwStatus = SetupLiveKey();
+        }
+        else
+        {
+            LOGI("User LiveKey already exists, exiting...");
         }
         // ---- local work as the user is completed ----
 
@@ -277,6 +285,9 @@ DWORD SetupUserLiveKey()
     {
         CloseHandle(hUserToken);
     }
+
+
+    LOGI("SetupUserLiveKey exit, Status=0x%x", dwStatus );
 
     return dwStatus;
 }
@@ -302,17 +313,17 @@ DWORD WINAPI CtrlHandlerEx(DWORD ctrl, DWORD evtType, LPVOID evtData, LPVOID /*c
         if (evtType == WTS_SESSION_LOGON || 
             evtType == WTS_SESSION_UNLOCK) {
 
-            wchar_t who[256] = {};
+            char who[256] = {};
             DescribeSessionUser(sid, who, _countof(who));
 
-            wchar_t line[512] = {};
-            StringCchPrintfW(line, _countof(line),
-                L"Session %u: %s %s",
+            char line[512] = {};
+            sprintf_s(line, _countof(line),
+                "Session %u: %s %s",
                 sid,
-                (evtType == WTS_SESSION_LOGON) ? L"Logon" : L"Unlock",
+                (evtType == WTS_SESSION_LOGON) ? "Logon" : "Unlock",
                 who);
 
-            LogEvent(EVENTLOG_INFORMATION_TYPE, line);
+            LOGI(line);
 
             // Setup user's LiveKey if doesn't exist yet
             SetupUserLiveKey();
@@ -566,8 +577,6 @@ void WINAPI ServiceMain(DWORD /*argc*/, LPWSTR* /*argv*/)
 
     // We're ready
     ReportStatus(SERVICE_RUNNING);
-    LogEvent(EVENTLOG_INFORMATION_TYPE, L"Service started; waiting for logon/logoff...");
-
 
     // Create Pipe Server thread
     DWORD threadId;
@@ -588,7 +597,7 @@ void WINAPI ServiceMain(DWORD /*argc*/, LPWSTR* /*argv*/)
     // Minimal wait loop
     WaitForSingleObject(gStopEvent, INFINITE);
 
-    LogEvent(EVENTLOG_INFORMATION_TYPE, L"Service stopping...");
+    LOGI("LiveKeyEngine service stopped.");
 
     WaitForSingleObject(ghPipeServerThread, INFINITE);
     CloseHandle(ghPipeServerThread);
@@ -599,6 +608,8 @@ void WINAPI ServiceMain(DWORD /*argc*/, LPWSTR* /*argv*/)
 
 int wmain()
 {
+    LOGI("LiveKeyEngine service started ...");
+
     SERVICE_TABLE_ENTRYW table[] = {
         { const_cast<LPWSTR>(kServiceName), ServiceMain },
         { nullptr, nullptr }

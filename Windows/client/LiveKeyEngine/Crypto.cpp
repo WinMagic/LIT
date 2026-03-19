@@ -16,6 +16,7 @@
 */
 
 #include "Crypto.h"
+#include "Log.h"
 
 #include <wincrypt.h>
 #include <string>
@@ -57,6 +58,7 @@ DWORD FindKey(
             0);
         if (dwStatus)
         {
+			LOGE("NCryptOpenStorageProvider failed, Status=0x%x", dwStatus);
             break;
         }
 
@@ -72,7 +74,8 @@ DWORD FindKey(
                 NCRYPT_SILENT_FLAG);
             if (dwStatus)
             {
-                break;
+				LOGE("NCryptEnumKeys failed, Status=0x%x", dwStatus);
+				break;
             }
 
             if (0 == wcscmp(pszKeyName, pKeyName->pszName))
@@ -131,6 +134,7 @@ DWORD CreateKey(
             0);
         if (dwStatus)
         {
+			LOGE("NCryptOpenStorageProvider failed, Status=0x%x", dwStatus);
             break;
         }
 
@@ -144,12 +148,14 @@ DWORD CreateKey(
 
         if (dwStatus)
         {
-            break;
+			LOGE("NCryptCreatePersistedKey failed, Status=0x%x", dwStatus);
+			break;
         }
 
         dwStatus = NCryptFinalizeKey(hKey, NCRYPT_SILENT_FLAG);
         if (dwStatus)
         {
+			LOGE("NCryptFinalizeKey failed, Status=0x%x", dwStatus);
             break;
         }
 
@@ -185,6 +191,7 @@ DWORD DeleteKey(LPCWSTR keyName)
 		dwStatus = NCryptOpenStorageProvider(&hProv, WM_KEY_STORAGE_PROVIDER, 0);
 		if (dwStatus)
 		{
+			LOGE("NCryptOpenStorageProvider failed, Status=0x%x", dwStatus);
 			break;
 		}
 
@@ -196,6 +203,7 @@ DWORD DeleteKey(LPCWSTR keyName)
 			NCRYPT_SILENT_FLAG);
 		if (dwStatus)
 		{
+			LOGE("NCryptOpenKey failed, Status=0x%x", dwStatus);
 			break;
 		}
 		dwStatus = NCryptDeleteKey(
@@ -203,6 +211,7 @@ DWORD DeleteKey(LPCWSTR keyName)
 			NCRYPT_SILENT_FLAG);
 		if (dwStatus)
 		{
+			LOGE("NCryptDeleteKey failed, Status=0x%x", dwStatus);
 			break;
 		}
 
@@ -261,12 +270,14 @@ DWORD GetBCryptPublicKeyBlob(
 		dwStatus = NCryptOpenStorageProvider(&hProv, WM_KEY_STORAGE_PROVIDER, 0);
 		if (dwStatus)
 		{
+			LOGE("NCryptOpenStorageProvider failed, Status=0x%x", dwStatus);
 			break;
 		}
 
 		dwStatus = NCryptOpenKey(hProv, &hKey, keyName, AT_SIGNATURE, NCRYPT_SILENT_FLAG);
 		if (dwStatus)
 		{
+			LOGE("NCryptOpenKey failed, Status=0x%x", dwStatus);
 			break;
 		}
 
@@ -280,6 +291,7 @@ DWORD GetBCryptPublicKeyBlob(
 		if (!bSuccess)
 		{
 			dwStatus = GetLastError();
+			LOGE("CryptExportPublicKeyInfo failed, Status=0x%x", dwStatus);
 			break;
 		}
 
@@ -287,6 +299,7 @@ DWORD GetBCryptPublicKeyBlob(
 		if (!pPubKeyInfo)
 		{
 			dwStatus = ERROR_OUTOFMEMORY;
+			LOGE("No memory for pPubKeyInfo!");
 			break;
 		}
 
@@ -300,6 +313,7 @@ DWORD GetBCryptPublicKeyBlob(
 		if (!bSuccess)
 		{
 			dwStatus = GetLastError();
+			LOGE("CryptExportPublicKeyInfo failed, Status=0x%x", dwStatus);
 			break;
 		}
 
@@ -310,6 +324,7 @@ DWORD GetBCryptPublicKeyBlob(
 		if (!bSuccess)
 		{
 			dwStatus = GetLastError();
+			LOGE("CryptImportPublicKeyInfoEx2 failed, Status=0x%x", dwStatus);
 			break;
 		}
 
@@ -321,6 +336,11 @@ DWORD GetBCryptPublicKeyBlob(
 			*pdwPubKeyBlobSize,
 			pdwPubKeyBlobSize,
 			0);
+		if (dwStatus)
+		{
+			LOGE("BCryptExportKey failed, Status=0x%x", dwStatus);
+			break;
+		}
 
 	} while (0);
 
@@ -382,6 +402,7 @@ DWORD FindKeyContainerName(
 
 		if (dwStatus)
 		{
+			LOGE("NCryptOpenStorageProvider failed, Status=0x%x", dwStatus);
 			break;
 		}
 
@@ -396,6 +417,7 @@ DWORD FindKeyContainerName(
 
 			if (dwStatus)
 			{
+				LOGE("NCryptEnumKeys failed, Status=0x%x", dwStatus);
 				break;
 			}
 
@@ -407,6 +429,7 @@ DWORD FindKeyContainerName(
 				NCRYPT_SILENT_FLAG);
 			if (dwStatus)
 			{
+				LOGE("NCryptOpenKey failed, Status=0x%x", dwStatus);
 				break;
 			}
 
@@ -421,6 +444,7 @@ DWORD FindKeyContainerName(
 			if (!bSuccess)
 			{
 				dwStatus = GetLastError();
+				LOGE("CryptExportPublicKeyInfo failed, Status=0x%x", dwStatus);
 				break;
 			}
 
@@ -428,6 +452,7 @@ DWORD FindKeyContainerName(
 			if (!pPubKeyInfo)
 			{
 				dwStatus = ERROR_OUTOFMEMORY;
+				LOGE("No memory pPubKeyInfo");
 				break;
 			}
 
@@ -441,6 +466,7 @@ DWORD FindKeyContainerName(
 			if (!bSuccess)
 			{
 				dwStatus = GetLastError();
+				LOGE("CryptExportPublicKeyInfo failed, Status=0x%x", dwStatus);
 				break;
 			}
 
@@ -452,6 +478,7 @@ DWORD FindKeyContainerName(
 				if ((wcslen(pKeyName->pszName) + 1) * sizeof(WCHAR) > dwOutBufferSize)
 				{
 					dwStatus = ERROR_BUFFER_OVERFLOW;
+					LOGE("CertComparePublicKeyInfo failed, Status=0x%x", dwStatus);
 					break;
 				}
 
@@ -533,6 +560,7 @@ DWORD InstallCertificate(PBYTE pCert, DWORD dwCertSize)
 		if (!pCertContext)
 		{
 			dwStatus = GetLastError();
+			LOGE("CertCreateCertificateContext failed, Status=0x%x", dwStatus);
 			break;
 		}
 
@@ -544,6 +572,7 @@ DWORD InstallCertificate(PBYTE pCert, DWORD dwCertSize)
 			sizeof(keyContainerName));
 		if (dwStatus)
 		{
+			LOGE("FindKeyContainerName failed, Status=0x%x", dwStatus);
 			break;
 		}
 
@@ -566,6 +595,7 @@ DWORD InstallCertificate(PBYTE pCert, DWORD dwCertSize)
 		if (!bSuccess)
 		{
 			dwStatus = GetLastError();
+			LOGE("CertSetCertificateContextProperty failed, Status=0x%x", dwStatus);
 			break;
 		}
 
@@ -573,6 +603,7 @@ DWORD InstallCertificate(PBYTE pCert, DWORD dwCertSize)
 		if (!hCertStore)
 		{
 			dwStatus = GetLastError();
+			LOGE("CertOpenSystemStoreW failed, Status=0x%x", dwStatus);
 			break;
 		}
 
@@ -585,6 +616,7 @@ DWORD InstallCertificate(PBYTE pCert, DWORD dwCertSize)
 		if (!bSuccess)
 		{
 			dwStatus = GetLastError();
+			LOGE("CertAddCertificateContextToStore failed, Status=0x%x", dwStatus);
 			break;
 		}
 
