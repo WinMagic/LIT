@@ -64,10 +64,7 @@ On **March 2, 2026**, we submitted both **LIT (Live Identity in Transaction)** a
 We open‑sourced the handshake because clarity is a public good—and secure architecture should be available to all. When the architecture is correct, security becomes a background rhythm and humans are finally unburdened.
 
 ---
-
-## Getting Started
----
-# LIT Reference Project (Windows)
+# Repository content: LIT Reference Project (Windows)
 
 This reference project demonstrates **LIT** concepts in action on **Windows 10/11** and **Windows Server 2016+**.
 
