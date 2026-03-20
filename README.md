@@ -186,4 +186,4 @@ If you want to participate in standards work around LIT/DIT, please open a discu
 
 ## License
 
-MIT
+GNU General Public License
