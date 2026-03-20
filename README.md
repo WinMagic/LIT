@@ -130,11 +130,9 @@ Purpose   : Logging verbosity (e.g., 1=ERROR, 2=INFO, 3=DEBUG)
 
 ## Quick Build & Run (Example)
 
-1. **Prereqs**
-   Client:
-   - Microsoft Windows 10/11 with TPM 2.0 enabled
-   Server:
-   - MS Server with IIS
+1. **Prereqs**  
+   - Client: Microsoft Windows 10/11 with TPM 2.0 enabled  
+   - Server: Microsoft Server with IIS (optional)
 
 2. **Build**
    - Open the solution in Visual Studio, Tested with version 2022
@@ -151,7 +149,7 @@ Purpose   : Logging verbosity (e.g., 1=ERROR, 2=INFO, 3=DEBUG)
    - `rundll32 "C:\Windows\System32\WmKsp.dll" Register`
 
 5. **Run the Server**
-   - Launch the test server  (Only if you built your own)
+   - Launch the server (if you built your own)
    
 6. **Run the Client**
    - The LiveKey gets created by LiveKeyEngine service at user's Login/Unlock, check the logfile for possible issues C:\Windows\Temp\LiveKeyEngine.log
