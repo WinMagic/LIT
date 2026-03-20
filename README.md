@@ -131,15 +131,13 @@ Purpose   : Logging verbosity (e.g., 1=ERROR, 2=INFO, 3=DEBUG)
 ## Quick Build & Run (Example)
 
 1. **Prereqs**
-   Build:
-   - Microsoft Visual Studio (Tested with version 2022)
    Client:
    - Microsoft Windows 10/11 with TPM 2.0 enabled
    Server:
    - MS Server with IIS
 
 2. **Build**
-   - Open the solution in Visual Studio 
+   - Open the solution in Visual Studio, Tested with version 2022
    - Build **Release x64**
 
 3. **Install the Live Key Engine (Service)**
