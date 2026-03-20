@@ -2,72 +2,92 @@ using LIT.ServerMVC.Data;
 using LIT.ServerMVC.Services;
 using LIT.ServerMVC.Services.Implementation;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
+using Serilog.Events;
 
-var builder = WebApplication.CreateBuilder(args);
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Verbose()
+    .MinimumLevel.Override("Microsoft", LogEventLevel.Fatal)
+    .MinimumLevel.Override("System", LogEventLevel.Fatal)
+    .MinimumLevel.Override("Serilog", LogEventLevel.Fatal)
+    .WriteTo.Console()
+    .WriteTo.File(path: "logs/app-.log", rollingInterval: RollingInterval.Month, retainedFileCountLimit: 24, shared: true)
+    .CreateLogger();
 
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
+try
 {
-    //Recreate migration if changing SQL
+    var builder = WebApplication.CreateBuilder(args);
 
-    //sql server database
-    //options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+    builder.Host.UseSerilog();
 
-    //sqlite database
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"));
-});
+    builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    {
+        //Recreate migration if changing SQL
 
-// Add services to the container.
+        //sql server database
+        //options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
 
-// API + MVC Controllers
-builder.Services.AddControllersWithViews();//.AddRazorRuntimeCompilation();
+        //sqlite database
+        options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"));
+    });
 
-builder.Services.AddAuthentication(o =>
-{
-    o.DefaultAuthenticateScheme = "AppCookie";
-    o.DefaultChallengeScheme = "AppCookie";
-    o.DefaultSignInScheme = "AppCookie";
-})
-.AddCookie("AppCookie", o =>
-{
-    o.LoginPath = "/Account/Login";
-    o.LogoutPath = "/Account/Logout";
-    o.ExpireTimeSpan = TimeSpan.FromMinutes(15);
-    o.SlidingExpiration = true;
-    //o.Cookie.HttpOnly = true;
-});
+    // Add services to the container.
 
-builder.Services.AddAuthorization();
+    // API + MVC Controllers
+    builder.Services.AddControllersWithViews();//.AddRazorRuntimeCompilation();
 
-builder.Services.AddSingleton<ICertificateGenerationService, CertificateGenerationService>();
-builder.Services.AddSingleton<ICertificateValidationService, CertificateValidationService>();
-var app = builder.Build();
+    builder.Services.AddAuthentication(o =>
+    {
+        o.DefaultAuthenticateScheme = "AppCookie";
+        o.DefaultChallengeScheme = "AppCookie";
+        o.DefaultSignInScheme = "AppCookie";
+    })
+    .AddCookie("AppCookie", o =>
+    {
+        o.LoginPath = "/Account/Login";
+        o.LogoutPath = "/Account/Logout";
+        o.ExpireTimeSpan = TimeSpan.FromMinutes(15);
+        o.SlidingExpiration = true;
+        //o.Cookie.HttpOnly = true;
+    });
 
-//automatic DB creation and migration
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    db.Database.Migrate();
+    builder.Services.AddAuthorization();
+
+    builder.Services.AddSingleton<ICertificateGenerationService, CertificateGenerationService>();
+    builder.Services.AddSingleton<ICertificateValidationService, CertificateValidationService>();
+    var app = builder.Build();
+
+    //automatic DB creation and migration
+    using (var scope = app.Services.CreateScope())
+    {
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        db.Database.Migrate();
+    }
+
+    // Configure the HTTP request pipeline.
+    if (!app.Environment.IsDevelopment())
+    {
+        app.UseExceptionHandler("/Home/Error");
+        // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+        app.UseHsts();
+    }
+
+    app.UseHttpsRedirection();
+    app.UseStaticFiles();
+
+    app.UseRouting();
+
+    app.UseAuthentication();
+    app.UseAuthorization();
+
+    app.MapControllers();
+    app.MapControllerRoute(
+        name: "default",
+        pattern: "{controller=Account}/{action=Login}/{id?}");
+
+    app.Run();
 }
-
-// Configure the HTTP request pipeline.
-if (!app.Environment.IsDevelopment())
+catch (Exception ex)
 {
-    app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-    app.UseHsts();
+    Log.CloseAndFlush();
 }
-
-app.UseHttpsRedirection();
-app.UseStaticFiles();
-
-app.UseRouting();
-
-app.UseAuthentication();
-app.UseAuthorization();
-
-app.MapControllers();
-app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=Account}/{action=Login}/{id?}");
-
-app.Run();

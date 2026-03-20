@@ -23,6 +23,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Net;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
@@ -30,7 +31,7 @@ using System.Text;
 
 namespace LIT.ServerMVC.Controllers
 {
-    public class AccountController(ApplicationDbContext dbContext, ICertificateValidationService certificateValidationService) : Controller
+    public class AccountController(ApplicationDbContext dbContext, ICertificateValidationService certificateValidationService, ILogger<AccountController> logger) : Controller
     {
         [AllowAnonymous]
         [HttpGet]
@@ -39,9 +40,20 @@ namespace LIT.ServerMVC.Controllers
             var certificate = HttpContext.Connection.ClientCertificate;
             if (certificate != null && !logoutWithCert)
             {
-                var dictionary= await LoginWithCert(certificate);
-                TempData["Message"] = $"User: {dictionary["User"]}, Device: {dictionary["Device"]} has successfully logged in";
-                return RedirectToAction("Index", "TodoItem");
+                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                try
+                {
+                    var dictionary = await LoginWithCert(certificate);
+                    TempData["Message"] = $"User: {dictionary["User"]}, Device: {dictionary["Device"]} has successfully logged in";
+                    logger.LogInformation($"User: {dictionary["User"]} has logged in using certificate IP Address: {ipAddress}");
+                    return RedirectToAction("Index", "TodoItem");
+                }
+                catch (Exception ex)
+                {
+                    logger.LogInformation($"Attempt to login using certificate failed. IP Address: {ipAddress}");
+                    ModelState.AddModelError(string.Empty, ex.Message);
+                    return View();
+                }
             }
 
 
@@ -69,6 +81,8 @@ namespace LIT.ServerMVC.Controllers
         [HttpPost]
         public async Task<IActionResult> Login(LoginViewModel model, string? returnUrl = null)
         {
+            var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+            logger.LogInformation($"User: {model.UserName} attempting to login using password IP Address: {ipAddress}");
             if (!ModelState.IsValid)
             {
                 ViewBag.ReturnUrl = returnUrl;
@@ -89,6 +103,7 @@ namespace LIT.ServerMVC.Controllers
                 return Redirect(returnUrl);
 
             TempData["Message"] = $"User {model.UserName} has successfully logged in";
+            logger.LogInformation($"User: {model.UserName} has logged in using password IP Address: {ipAddress}");
             return RedirectToAction("Index", "TodoItem");
         }
 
