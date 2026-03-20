@@ -65,41 +65,69 @@ We open‑sourced the handshake because clarity is a public good—and secure ar
 
 ---
 
-## Repository Contents
+## Getting Started
+---
+# LIT Reference Project (Windows)
 
-This repository contains a **fully working reference project** with **client and server** components that demonstrate LIT/DIT in action:
+This reference project demonstrates **LIT** concepts in action on **Windows 10/11** and **Windows Server 2016+**.
 
-- **Live Key Engine service — reference project**  
-  A Windows service anchoring cryptographic identity in hardware (TPM/CNG), running the DIT Identity Pulse, and providing continuous endpoint identity.
+For hands‑on evaluation, a hosted **LIT test server** is available:
 
-- **TPM‑backed mTLS authentication**  
-  Client keys are generated inside the TPM (non‑exportable, hardware‑bound) and used for **client‑auth mTLS**.
-
-- **Microsoft CNG Key Storage Provider**  
-  Integration with NCrypt/CNG providers (including TPM KSP), keeping keys managed within the secure Windows platform.
-
-- **Issuing X.509 client certs without CSRs**  
-  A streamlined flow that issues client certificates **without** CSR exchanges—by validating the device’s public key directly—dramatically reducing PKI friction.
-
-- **Authenticate & admit users via mTLS presence**  
-  The server authenticates based on the presence of the correct mTLS identity—no passwords, no UI prompts—identity is a property of the connection.
+- **Server:** https://lit.winmagic.dev  
+- **Purpose:** experiment with client components **without** deploying your own server.
 
 ---
 
-## Get Started
+## Client Components
 
-- **Read the Manifesto:**  
-  TBD: add link to Op‑Ed / Whitepaper
+- **LiveKeyEngine (Windows Service)**  
+  - Creates and registers a user’s **LiveKey** for passwordless access to the sample **“User Tasks”** service hosted by the LIT server.  
+  - Enforces **LiveKey usage policy** (allows or denies LiveKey access based on policy).
 
-- **Review the Standards Drafts:**  
-  TBD: Add link to IETF submission
-  TBD: Add link to W3C submission
+- **WinMagic CNG Key Storage Provider (KSP)**  
+  - Creates, stores, and manages **TPM‑backed LiveKeys** via the Windows CNG infrastructure.
 
-- **Explore the Code:**  
-  TBD: Add link to DIT reference implementation
-  TBD: Add link to the Live Key Engine service
-  TBD: Add link to client/server demo
+---
 
+## Test Server Endpoints
+
+The LIT test server exposes a REST API used by the client for:
+
+- **LiveKey registration**  
+- **User certificate retrieval**  
+- **CA certificate retrieval**
+
+> You can reconfigure the client to point at your own server later; defaults target the public test server to minimize setup.
+
+---
+
+## LiveKeyEngine Configuration
+
+**Registry path:**  
+`HKLM\SYSTEM\CurrentControlSet\Services\LiveKeyEngine\Parameters`
+
+Supported values:
+
+```text
+Name      : Host
+Type      : REG_SZ
+Default   : lit.winmagic.dev
+Purpose   : LIT server hostname
+
+Name      : Port
+Type      : REG_DWORD
+Default   : 443
+Purpose   : LIT server TCP port (HTTPS)
+
+Name      : LogFile
+Type      : REG_SZ
+Default   : C:\Windows\Temp\LiveKeyEngine.log
+Purpose   : Absolute path to the service log file
+
+Name      : LogLevel
+Type      : REG_DWORD
+Default   : 2   (LOG_LEVEL_INFO)
+Purpose   : Logging verbosity (e.g., 1=ERROR, 2=INFO, 3=DEBUG)
 ---
 
 ## Quick Build & Run (Example)
