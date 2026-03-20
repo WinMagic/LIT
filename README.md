@@ -105,7 +105,7 @@ The LIT test server exposes a REST API used by the client for:
 
 Supported values:
 
----
+```text
 Name      : Host
 Type      : REG_SZ
 Default   : lit.winmagic.dev
@@ -125,14 +125,16 @@ Name      : LogLevel
 Type      : REG_DWORD
 Default   : 2   (LOG_LEVEL_INFO)
 Purpose   : Logging verbosity (e.g., 1=ERROR, 2=INFO, 3=DEBUG)
----
+
+```
 
 ## Quick Build & Run (Example)
 
 1. **Prereqs**
+   Build:
+   - Microsoft Visual Studio (Tested with version 2022)
    Client:
    - Microsoft Windows 10/11 with TPM 2.0 enabled
-   - Microsoft Visual Studio (Tested with version 2022)   
    Server:
    - MS Server with IIS
 
@@ -151,13 +153,14 @@ Purpose   : Logging verbosity (e.g., 1=ERROR, 2=INFO, 3=DEBUG)
    - `rundll32 "C:\Windows\System32\WmKsp.dll" Register`
 
 5. **Run the Server**
-   - Launch the demo server (listens for mTLS)  
-   - Verify it trusts the issuing CA used by Live Key Engine
-
+   - Launch the test server  (Only if you built your own)
+   
 6. **Run the Client**
-   - The client uses the TPM‑bound key + mTLS to login to server
-   - Observe successful authentication based on Identity Pulse
-
+   - The LiveKey gets created by LiveKeyEngine service at user's Login/Unlock, check the logfile for possible issues C:\Windows\Temp\LiveKeyEngine.log
+   - Launch Web Browser
+   - Navigate to https://lit.winmagic.dev for passwordless login
+  
+   
 ---
 
 ## Architecture (High‑Level)
