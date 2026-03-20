@@ -105,7 +105,7 @@ The LIT test server exposes a REST API used by the client for:
 
 Supported values:
 
-```text
+---
 Name      : Host
 Type      : REG_SZ
 Default   : lit.winmagic.dev
