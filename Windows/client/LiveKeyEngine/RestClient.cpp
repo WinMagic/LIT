@@ -92,6 +92,8 @@ DWORD SendClientRequest(
 
     do
     {
+        LOGD("SendClientRequest enter..." );
+
         hSession = WinHttpOpen(
             USER_AGENT,
             WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY,
@@ -116,20 +118,15 @@ DWORD SendClientRequest(
         auto serviceName = GetServiceName();
         auto host = ReadServiceParameterString(
             serviceName,
-            L"Host");
+            L"Host",
+            L"lit.winmagic.dev");
+
         auto port = (INTERNET_PORT)ReadServiceParameterDword(
             serviceName,
-            L"Port");
+            L"Port",
+            INTERNET_DEFAULT_HTTPS_PORT );
 
-        if (host.empty())
-        {
-            host = L"lit.winmagic.dev";
-        }
-
-        if (port == 0)
-        {
-            port = INTERNET_DEFAULT_HTTPS_PORT;
-        }
+        LOGD("URL: %ls:%d", host.c_str(), port);
 
         hConnect = WinHttpConnect(hSession, host.c_str(), port, 0);
         if (!hConnect)
@@ -240,6 +237,8 @@ DWORD SendClientRequest(
     {
         WinHttpCloseHandle(hSession);
     }
+
+    LOGD("SendClientRequest exit, status=%d", dwStatus);
 
     return dwStatus;
 }

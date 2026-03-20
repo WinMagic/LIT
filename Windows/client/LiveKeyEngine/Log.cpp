@@ -6,7 +6,11 @@
 
 #include "Log.h"
 
-int currLogLevel = LOG_LEVEL_DEBUG;
+
+#include <string>
+
+extern int logLevel ;
+extern std::wstring  logFile;
 
 
 static void make_timestamp(char* buf, size_t bufsz)
@@ -29,11 +33,9 @@ static const char* level_str(int level)
     }
 }
 
-#define LOG_FILE_PATH "C:\\Windows\\Temp\\LiveKeyEngine.log"
-
 void logprintf(int level, const char* format, ...)
 {
-	if (currLogLevel >= level)
+	if (logLevel >= level)
 	{
         char ts[32];
         make_timestamp(ts, sizeof ts);
@@ -41,7 +43,7 @@ void logprintf(int level, const char* format, ...)
 		va_list arg;
 		FILE* lldebugfp = NULL;
 
-		if (0 == fopen_s(&lldebugfp, LOG_FILE_PATH, "ab"))
+		if (0 == _wfopen_s(&lldebugfp, logFile.c_str(), L"ab"))
 		{
             // Print prefix with timestamp and level
             fprintf(lldebugfp, "[%s] [%s] ", ts, level_str(level));

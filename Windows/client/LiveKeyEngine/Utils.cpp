@@ -257,7 +257,8 @@ std::wstring GetProcessImagePath(DWORD pid, DWORD flags /*= 0*/) {
 
 std::wstring ReadServiceParameterString(
     const std::wstring& serviceName,
-    const std::wstring& valueName)
+    const std::wstring& valueName,
+    const wchar_t *defaultString )
 {
     // Build: SYSTEM\CurrentControlSet\Services\<serviceName>\Parameters
     std::wstring subkey =
@@ -274,9 +275,9 @@ std::wstring ReadServiceParameterString(
         &hKey);
 
     if (rc != ERROR_SUCCESS)
-        return L"";   // key not found / no access
+        return defaultString;   // key not found / no access
 
-    wchar_t buffer[512] = {};    // simple fixed buffer
+    wchar_t buffer[MAX_PATH] = {};
     DWORD type = 0;
     DWORD size = sizeof(buffer);
 
@@ -291,7 +292,7 @@ std::wstring ReadServiceParameterString(
     RegCloseKey(hKey);
 
     if (rc != ERROR_SUCCESS || type != REG_SZ)
-        return L"";   // not found or wrong type
+        return defaultString;   // key not found / no access
 
     return std::wstring(buffer);
 }
@@ -308,7 +309,8 @@ std::wstring ReadServiceParameterString(
 */
 DWORD ReadServiceParameterDword(
     const std::wstring& serviceName,
-    const std::wstring& valueName)
+    const std::wstring& valueName,
+    DWORD dwDefaultValue)
 {
     // Build: SYSTEM\CurrentControlSet\Services\<serviceName>\Parameters
     std::wstring subkey =
@@ -317,6 +319,11 @@ DWORD ReadServiceParameterDword(
         L"\\Parameters";
 
     HKEY hKey = NULL;
+
+    DWORD value = dwDefaultValue;
+    DWORD type = 0;
+    DWORD size = sizeof(value);
+
     LONG rc = RegOpenKeyExW(
         HKEY_LOCAL_MACHINE,
         subkey.c_str(),
@@ -324,25 +331,18 @@ DWORD ReadServiceParameterDword(
         KEY_READ,
         &hKey);
 
-    if (rc != ERROR_SUCCESS)
-        return 0;
-
-    DWORD value = 0;
-    DWORD type = 0;
-    DWORD size = sizeof(value);
-
-    rc = RegQueryValueExW(
-        hKey,
-        valueName.c_str(),
-        nullptr,
-        &type,
-        reinterpret_cast<LPBYTE>(&value),
-        &size);
+    if (rc == ERROR_SUCCESS)
+    {
+        rc = RegQueryValueExW(
+            hKey,
+            valueName.c_str(),
+            nullptr,
+            &type,
+            reinterpret_cast<LPBYTE>(&value),
+            &size);
+    }
 
     RegCloseKey(hKey);
-
-    if (rc != ERROR_SUCCESS || type != REG_DWORD)
-        return 0;
 
     return value;
 }

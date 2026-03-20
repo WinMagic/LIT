@@ -30,11 +30,13 @@ std::wstring GetProcessImagePath(DWORD pid, DWORD flags = 0);
 
 std::wstring ReadServiceParameterString(
     const std::wstring& serviceName,
-    const std::wstring& valueName);
+    const std::wstring& valueName,
+    const wchar_t* defaultString);
 
 DWORD ReadServiceParameterDword(
     const std::wstring& serviceName,
-    const std::wstring& valueName);
+    const std::wstring& valueName,
+    DWORD dwDefaultValue);
 
 std::wstring GetServiceName();
 

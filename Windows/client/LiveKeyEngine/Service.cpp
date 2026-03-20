@@ -35,6 +35,11 @@
 #pragma comment(lib, "Wtsapi32.lib")
 #pragma comment(lib, "Crypt32.lib")
 
+
+// service parameters
+int logLevel ;
+std::wstring logFile ;
+
 static const wchar_t* kServiceName = L"LiveKeyEngine";
 
 SERVICE_STATUS          gStatus{};
@@ -313,6 +318,8 @@ DWORD WINAPI CtrlHandlerEx(DWORD ctrl, DWORD evtType, LPVOID evtData, LPVOID /*c
         // WTS_SESSION_LOGON = 0x5, WTS_SESSION_LOGOFF = 0x6
         if (evtType == WTS_SESSION_LOGON || 
             evtType == WTS_SESSION_UNLOCK) {
+
+            //LoadServiceParameters();
 
             char who[256] = {};
             DescribeSessionUser(sid, who, _countof(who));
@@ -607,14 +614,30 @@ void WINAPI ServiceMain(DWORD /*argc*/, LPWSTR* /*argv*/)
     ReportStatus(SERVICE_STOPPED);
 }
 
+void LoadServiceParameters()
+{
+    logFile = ReadServiceParameterString(
+        kServiceName,
+        L"LogFile",
+        L"C:\\Windows\\Temp\\LiveKeyEngine.log");
+
+    logLevel = ReadServiceParameterDword(
+        kServiceName,
+        L"LogLevel",
+        LOG_LEVEL_INFO);
+}
+
 int wmain()
 {
+    LoadServiceParameters();
+
     LOGI("LiveKeyEngine service started ...");
 
     SERVICE_TABLE_ENTRYW table[] = {
         { const_cast<LPWSTR>(kServiceName), ServiceMain },
         { nullptr, nullptr }
     };
+
     // Connect to SCM; blocks until service stops
     StartServiceCtrlDispatcherW(table);
     return 0;
