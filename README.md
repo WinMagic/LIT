@@ -1,7 +1,7 @@
 # Live Identity in Transaction (LIT)
 ### The General Architecture for Continuous, Machine‑Native Identity
 
-# Deterministic Identity in Transaction (DIT)  
+# Device Identity in Transaction (DIT)  
 ### The mTLS‑Based Identity Pulse That Makes LIT Real
 
 ---
@@ -29,7 +29,7 @@ Under LIT, a “login” becomes obsolete because identity is **always alive**, 
 
 ---
 
-## What Is DIT? (Deterministic Identity in Transaction) — The Practical Handshake
+## What Is DIT? (Device Identity in Transaction) — The Practical Handshake
 
 DIT is the applied implementation of LIT using:
 
@@ -59,7 +59,7 @@ LIT/DIT remove friction by fixing the foundation.
 
 ## Official Standards Submission
 
-On **March 2, 2026**, we submitted both **LIT (Live Identity in Transaction)** and **DIT (Deterministic Identity in Transaction)** proposals to the IETF and W3C for standardization.
+On **March 2, 2026**, we submitted both **LIT (Live Identity in Transaction)** and **DIT (Device Identity in Transaction)** proposals to the IETF and W3C for standardization.
 
 We open‑sourced the handshake because clarity is a public good—and secure architecture should be available to all. When the architecture is correct, security becomes a background rhythm and humans are finally unburdened.
 
