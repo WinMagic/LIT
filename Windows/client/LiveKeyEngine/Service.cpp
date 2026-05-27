@@ -188,7 +188,7 @@ DWORD SetupLiveKey()
             LOGE("SendClientRequest(GetClientCertificate) failed, WEB Status=%d", status);
             break;
         }
-        // The key has been registered successfully
+        // The cert is reveived, decode and install it
 		auto cert_b64 = resp_map["certificate"];
         if (cert_b64.empty())
         {
