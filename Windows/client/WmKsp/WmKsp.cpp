@@ -1,7 +1,7 @@
 /*
 * Copyright (C) 2026 WinMagic Inc.
 *
-* This file is part of the WinMagic Key Storage Provider..
+* This file is part of the WinMagic Key Storage Provider.
 *
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -27,7 +27,8 @@
 #include "TPM2CryptoProvider.h"
 #include "METokenCryptoProvider.h"
 #include "tlv.h"
-#include "PipeClient.h"
+#include "MeTokenClient.h"
+#include "LkeClient.h"
 
 DWORD dwFlags;
 WCHAR logFile[256];
@@ -2411,8 +2412,13 @@ WmKspSignHash(
         goto cleanup;
     }
 
-    // Check the policy
-
+    // Confirm that the LiveKey remains eligible for use in the exercise
+    // phase according to the currently configured runtime policies.
+    Status = LkeClient::SendRequest(LKE_AUTHORIZE_KEY_USAGE);
+    if (Status)
+    {
+        goto cleanup;
+    }
 
 	Status = pProvider->pCryptoProvider->SignHash(
 		pKey->pbKeyBlob,

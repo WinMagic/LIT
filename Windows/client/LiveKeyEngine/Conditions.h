@@ -1,7 +1,7 @@
 /*
 * Copyright (C) 2026 WinMagic Inc.
 *
-* This file is part of the WinMagic Key Storage Provider.
+* This file is part of the WinMagic LIT reference project.
 *
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -14,25 +14,10 @@
 * You should have received a copy of the GNU General Public License
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef __REGISTRY_H__
-#define __REGISTRY_H__
+
+#pragma once
 
 #include <windows.h>
 
-BOOL RegSetWideString(LPCWSTR pValueName, LPCWSTR pValue);
-BOOL RegGetWideString(LPCWSTR pValueName, LPWSTR pBuffer, PDWORD pdwBufferSize);
-BOOL RegGetDWORD(LPCWSTR pValueName, PDWORD pdwValue);
-
-
-
-
-
-
-
-
-
-
-
-
-
-#endif	//__REGISTRY_H__
+DWORD AreMintConditionsSatisfied();
+DWORD AreExerciseConditionsSatisfied();

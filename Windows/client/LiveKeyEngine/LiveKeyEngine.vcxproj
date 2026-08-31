@@ -131,6 +131,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Conditions.cpp" />
     <ClCompile Include="Crypto.cpp" />
     <ClCompile Include="Json.cpp" />
     <ClCompile Include="Log.cpp" />
@@ -142,6 +143,7 @@
     <ClInclude Include="..\include\LkePipe.h" />
     <ClInclude Include="..\include\PipeRequest.h" />
     <ClInclude Include="..\include\Tlv.h" />
+    <ClInclude Include="Conditions.h" />
     <ClInclude Include="Crypto.h" />
     <ClInclude Include="Json.h" />
     <ClInclude Include="Log.h" />

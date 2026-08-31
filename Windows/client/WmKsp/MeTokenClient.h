@@ -14,25 +14,23 @@
 * You should have received a copy of the GNU General Public License
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef __REGISTRY_H__
-#define __REGISTRY_H__
+#pragma once
 
 #include <windows.h>
+#include <crtdbg.h>
+#include "PipeRequest.h"
 
-BOOL RegSetWideString(LPCWSTR pValueName, LPCWSTR pValue);
-BOOL RegGetWideString(LPCWSTR pValueName, LPWSTR pBuffer, PDWORD pdwBufferSize);
-BOOL RegGetDWORD(LPCWSTR pValueName, PDWORD pdwValue);
+class MeTokenClient
+{
+private:
+	static DWORD GetActiveSessionId(PDWORD pdwSessionId);
+public:
 
+	MeTokenClient();
+	~MeTokenClient();
 
+	static DWORD SendRequest(PipeRequest& request, PipeResponse& response);
+	static DWORD SendRequest(PipeRequest& request);
+	static DWORD SendRequest(BYTE requestId);
+};
 
-
-
-
-
-
-
-
-
-
-
-#endif	//__REGISTRY_H__

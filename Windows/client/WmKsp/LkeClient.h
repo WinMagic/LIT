@@ -1,7 +1,7 @@
 /*
 * Copyright (C) 2026 WinMagic Inc.
 *
-* This file is part of the WinMagic Key Storage Provider..
+* This file is part of the WinMagic Key Storage Provider.
 *
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -14,23 +14,27 @@
 * You should have received a copy of the GNU General Public License
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
+
 #pragma once
 
 #include <windows.h>
 #include <crtdbg.h>
 #include "PipeRequest.h"
+#include "LkePipe.h"
 
-class MeTokenClient
+class LkeClient
 {
 private:
-	static DWORD GetActiveSessionId(PDWORD pdwSessionId);
+
 public:
 
-	MeTokenClient();
-	~MeTokenClient();
+	LkeClient();
+	~LkeClient();
 
 	static DWORD SendRequest(PipeRequest& request, PipeResponse& response);
 	static DWORD SendRequest(PipeRequest& request);
 	static DWORD SendRequest(BYTE requestId);
 };
+
+
 

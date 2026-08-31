@@ -22,8 +22,9 @@
     <ClCompile Include="CryptoProvider.cpp" />
     <ClCompile Include="Debug.cpp" />
     <ClCompile Include="hexdump.cpp" />
+    <ClCompile Include="LkeClient.cpp" />
+    <ClCompile Include="MeTokenClient.cpp" />
     <ClCompile Include="METokenCryproProvider.cpp" />
-    <ClCompile Include="PipeClient.cpp" />
     <ClCompile Include="Register.cpp" />
     <ClCompile Include="registry.cpp" />
     <ClCompile Include="Tpm2CryptoProvider.cpp" />
@@ -34,8 +35,9 @@
   <ItemGroup>
     <ClInclude Include="CryptoProvider.h" />
     <ClInclude Include="Debug.h" />
+    <ClInclude Include="LkeClient.h" />
+    <ClInclude Include="MeTokenClient.h" />
     <ClInclude Include="METokenCryptoProvider.h" />
-    <ClInclude Include="PipeClient.h" />
     <ClInclude Include="registry.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Tpm2CryptoProvider.h" />

@@ -1,7 +1,7 @@
 /*
 * Copyright (C) 2026 WinMagic Inc.
 *
-* This file is part of the WinMagic Key Storage Provider..
+* This file is part of the WinMagic Key Storage Provider.
 *
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 #include <windows.h>
 #include <wtsapi32.h>
 #include <stdio.h>
-#include "PipeClient.h"
+#include "MeTokenClient.h"
 
 #define ARRAY_LEN(a)	(sizeof(a)/sizeof(a[0]))
 

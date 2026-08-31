@@ -18,11 +18,13 @@
 #include <windows.h>
 #include <wtsapi32.h>
 #include <strsafe.h>
+#include <sddl.h>
 
 #include "Crypto.h"
 #include "Json.h"
 #include "RestClient.h"
 #include "Utils.h"
+#include "Conditions.h"
 #include "PipeRequest.h"
 #include "LkePipe.h"
 #include "Log.h"
@@ -99,6 +101,21 @@ DWORD SetupLiveKey()
 
 	do
 	{
+        /*
+         * Mint phase:
+         * A LiveKey is generated and registered with the relying party during
+         * this phase. Before proceeding, all security, policy, and eligibility
+         * checks are performed. The LiveKey is created only after successful
+         * validation of all required conditions.
+         */
+
+        dwStatus = AreMintConditionsSatisfied();
+        if (dwStatus)
+        {
+            LOGE("Mint condition verification failed, Status=0x%x", dwStatus);
+            break;
+        }
+
 		dwStatus = CreateKey(
 			LIVE_KEY_NAME,
 			BCRYPT_ECDSA_P256_ALGORITHM);
@@ -365,15 +382,6 @@ bool IsSessionLoggedIn(DWORD sessionId) {
 }
 
 
-DWORD LiveKeyAutorizationCheck(
-    DWORD dwClientSessionId,
-    DWORD dwClientProcessId )
-{
-    DWORD dwStatus = ERROR_ACCESS_DENIED;
-    auto procPath = GetProcessImagePath(dwClientProcessId);
-    return dwStatus;
-}
-
 DWORD ProcessPipeServerMessage(
     DWORD dwClientSessionId,
     DWORD dwClientProcessId,
@@ -390,16 +398,39 @@ DWORD ProcessPipeServerMessage(
     {
     case LKE_AUTHORIZE_KEY_USAGE:
 
-        auto ret = LiveKeyAutorizationCheck(
-            dwClientSessionId,
-            dwClientProcessId);
-        
-        response.SetStatus(ret);
+        response.SetStatus(AreExerciseConditionsSatisfied());
 
+        if (response.GetBufferSize() > maxByteCount)
+        {
+            dwStatus = ERROR_INSUFFICIENT_BUFFER;
+            break;
+        }
+
+        memcpy(buffer, response.GetBuffer(), response.GetBufferSize());
+        *retByteCount = (DWORD) response.GetBufferSize();
+        dwStatus = ERROR_SUCCESS;
         break;
     }
 
     return dwStatus;
+}
+//------------------------------------------------------------------------------
+BOOL CreatePipeDACL(SECURITY_ATTRIBUTES* pSA)
+{
+    const CHAR* szSD = "D:"       // Discretionary ACL
+        "(D;OICI;GA;;;BG)"        // Deny access to Built-in Guests
+        "(D;OICI;GA;;;AN)"        // Deny access to Anonymous Logon
+        "(A;OICI;GRGWGX;;;AU)"    // Allow read/write/execute to Authenticated Users
+        "(A;OICI;GA;;;BA)";       // Allow full control to Administrators
+
+    if (NULL == pSA)
+        return FALSE;
+
+    return ConvertStringSecurityDescriptorToSecurityDescriptorA(
+        szSD,
+        SDDL_REVISION_1,
+        &(pSA->lpSecurityDescriptor),
+        NULL);
 }
 //------------------------------------------------------------------------------
 
@@ -414,6 +445,12 @@ DWORD PipeServerThread(LPVOID lpThreadParameter)
 
 	do
 	{
+        if (!CreatePipeDACL(&sa))
+        {
+            dwStatus = GetLastError();
+            break;
+        }
+
 		hPipe = CreateNamedPipe(
 			LKE_PIPE,
 			PIPE_ACCESS_DUPLEX | FILE_FLAG_OVERLAPPED,
@@ -422,7 +459,7 @@ DWORD PipeServerThread(LPVOID lpThreadParameter)
             LKE_PIPE_BUFFER_SIZE,
             LKE_PIPE_BUFFER_SIZE,
 			1000,
-			NULL);
+			&sa);
 
 		if (hPipe == INVALID_HANDLE_VALUE)
 		{
@@ -490,6 +527,7 @@ DWORD PipeServerThread(LPVOID lpThreadParameter)
             if (!GetNamedPipeClientSessionId(hPipe, &dwClientSessionId))
             {
                 dwStatus = GetLastError();
+                LOGE("GetNamedPipeClientSessionId failed, Status=0x%x", dwStatus);
                 continue;
             }
 
@@ -497,16 +535,22 @@ DWORD PipeServerThread(LPVOID lpThreadParameter)
             if (!GetNamedPipeClientProcessId(hPipe, &dwClientProcessId))
             {
                 dwStatus = GetLastError();
+                LOGE("GetNamedPipeClientProcessId failed, Status=0x%x", dwStatus);
                 continue;
             }
 
-			ProcessPipeServerMessage(
+            dwStatus = ProcessPipeServerMessage(
                 dwClientSessionId,
                 dwClientProcessId,
                 IN OUT buffer,
 				dwByteCount, 
                 LKE_PIPE_BUFFER_SIZE,
                 OUT &dwByteCount);
+            if (dwStatus)
+            {
+                LOGE("ProcessPipeServerMessage failed, Status=0x%x", dwStatus);
+                continue;
+            }
 
 			DWORD dwWritten;
 
