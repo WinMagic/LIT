@@ -186,4 +186,14 @@ If you want to participate in standards work around LIT/DIT, please open a discu
 
 ## License
 
-GNU General Public License
+This project is dual licensed.
+
+**Open Source License**
+
+This software is available under the GNU Affero General Public License v3.0 (AGPL-3.0).
+
+**Commercial License**
+
+Organizations that wish to embed, modify, distribute, or offer the software as part of a proprietary product or service without complying with AGPL obligations may obtain a commercial license from WinMagic. https://winmagic.com/en/legal/commercial_license/
+
+Contact: legal@winmagic.com
