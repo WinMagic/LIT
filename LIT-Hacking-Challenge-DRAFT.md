@@ -119,20 +119,26 @@ SHA256 hash of LiveKeyEngine.exe:
 SHA256 hash of WmKsp.dll:
 e2651cc6ddb1f3104be98851eeb14c7a3ba86b233554a8102dcd4cb8bdcaa332
 				
-* **Installation and configuration:**
+### Installation and configuration:
 
-Install the Live Key Engine (Service)
+**Install the Live Key Engine (Service)**
 
-Copy WmKsp.dll to \Windows\System32 directoy
-Launch Windows Command Prompt as Administrator
-rundll32 "C:\Windows\System32\WmKsp.dll" Register
+Copy LiveKeyEngine.exe to C:\Windows\System32 directoy  
+Launch Windows Command Prompt as Administrator  
+Execute  
 
-Install and Register WinMagic CNG Key Storage Provider
+ sc.exe create LiveKeyEngine binPath="C:\Windows\System32\LiveKeyEngine.exe" start= auto  
+ sc.exe start LiveKeyEngine  
 
-Open an elevated Developer Command Prompt
-sc.exe create LiveKeyEngine binPath= "C:\path\to\LiveKeyEngine.exe" start= auto
-sc.exe start LiveKeyEngine
+**Install and Register WinMagic CNG Key Storage Provider**
 
+Copy WmKsp.dll to C:\Windows\System32 directoy  
+In the Administrator's command prompt  
+Execute
+ 
+ rundll32 "C:\Windows\System32\WmKsp.dll" Register  
+
+ 
 Participants should verify the published SHA-256 checksum before running the downloaded binaries.
 
 Where available, participants should also verify the digital signature of the release package.
