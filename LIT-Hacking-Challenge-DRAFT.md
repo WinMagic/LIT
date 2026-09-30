@@ -43,9 +43,7 @@ A valid attack must therefore succeed without:
 * Installing software, malware, agents, browser extensions, hooks, proxies, debuggers, monitoring tools, or any other software on the client device
 * Modifying the LIT client software
 * Modifying the operating system or its configuration
-* Extracting certificates, private keys, or secrets from the client device
 * Taking control of the user's session
-* Social engineering the user into performing actions on behalf of the attacker
 
 The following activities are within the scope of the challenge:
 
@@ -60,12 +58,10 @@ The following activities are outside the scope of the challenge:
 
 * Attacks against AWS infrastructure or AWS-managed services
 * Attacks against production systems or unrelated infrastructure
-* Social engineering of WinMagic employees, customers, or challenge participants
 * Physical attacks against devices
 * Destructive testing
 * Installation of malware, agents, browser extensions, hooking libraries, proxies, debuggers, or other attack software on a participant's device
 * Modification of the client device, operating system, or LIT client software
-* Extraction of keys, certificates, credentials, or secrets through local access
 * Unauthorized access to, modification of, or deletion of another participant's environment
 
 A successful challenge submission must demonstrate that the attacker can defeat the intended mTLS protection and modify another user's synthetic task list while operating solely from the network and without compromising, controlling, or modifying the legitimate client device.
