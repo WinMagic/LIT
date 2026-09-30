@@ -33,12 +33,12 @@ namespace LIT.ServerMVC.Controllers
     {
         [AllowAnonymous]
         [HttpGet]
-        public async Task<IActionResult> Login(string? returnUrl = null, bool logoutWithCert = false)
+        public async Task<IActionResult> Login(string? returnUrl = null, bool logoutWithCert = false, bool certLogin = false)
         {
             var certificate = HttpContext.Connection.ClientCertificate;
+            var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
             if (certificate != null && !logoutWithCert)
             {
-                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
                 try
                 {
                     var dictionary = await LoginWithCert(certificate);
@@ -66,43 +66,18 @@ namespace LIT.ServerMVC.Controllers
 
             ViewBag.ReturnUrl = returnUrl;
 
+            if (certLogin && certificate == null)
+            {
+                logger.LogInformation($"Attempt to login using certificate failed, no client certificate presented. IP Address: {ipAddress}");
+                ModelState.AddModelError(string.Empty, "No client certificate was presented. Close all browser windows, then reopen this page and select your certificate when prompted.");
+            }
+
             if (TempData.TryGetValue("LoginError", out var loginError) && loginError is string loginMsg && !string.IsNullOrEmpty(loginMsg))
             {
                 ModelState.AddModelError(string.Empty, loginMsg);
             }
 
             return View();
-        }
-
-        [AllowAnonymous]
-        [ValidateAntiForgeryToken]
-        [HttpPost]
-        public async Task<IActionResult> Login(LoginViewModel model, string? returnUrl = null)
-        {
-            var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-            logger.LogInformation($"User: {model.UserName} attempting to login using password IP Address: {ipAddress}");
-            if (!ModelState.IsValid)
-            {
-                ViewBag.ReturnUrl = returnUrl;
-                return View(model);
-            }
-
-            var user = await ValidateUserAsync(model.UserName, model.Password);
-            if (user == null)
-            {
-                ModelState.AddModelError(string.Empty, "Invalid username or password.");
-                ViewBag.ReturnUrl = returnUrl;
-                return View(model);
-            }
-
-            await SignInUserAsync(user.UserId.ToString(), model.UserName);
-
-            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
-                return Redirect(returnUrl);
-
-            TempData["Message"] = $"User {model.UserName} has successfully logged in";
-            logger.LogInformation($"User: {model.UserName} has logged in using password IP Address: {ipAddress}");
-            return RedirectToAction("Index", "TodoItem");
         }
 
         [HttpGet]
@@ -113,22 +88,8 @@ namespace LIT.ServerMVC.Controllers
             return RedirectToAction("Login", new { logoutWithCert });
         }
 
-        private async Task<Data.Models.User?> ValidateUserAsync(string username, string password)
-        {
-            var user = await dbContext.Users.FirstOrDefaultAsync(u => u.UserName == username);
-            if (user == null)
-                return null;
-
-            if (!Utils.VerifyHashedPassword(user.Password, password))
-                return null;
-
-            return user;
-        }
-
-
         private async Task<Dictionary<string, string>> LoginWithCert(X509Certificate2 certificate)
         {
-            //var model = new LoginViewModel();
             var certSubject = new Certificate();
             try
             {

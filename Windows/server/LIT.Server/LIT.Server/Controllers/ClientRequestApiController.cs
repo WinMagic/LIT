@@ -135,7 +135,7 @@ namespace LIT.ServerMVC.Controllers
                         };
                         dbContext.ServerCerts.Add(caCert);
 
-                        CertificateUtils.InstallCertificate(new X509Certificate2(newCA.Export(X509ContentType.Pfx), "", X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.Exportable), "My");
+                        CertificateUtils.InstallCertificate(new X509Certificate2(newCA.Export(X509ContentType.Pfx), "", X509KeyStorageFlags.PersistKeySet), "My");
 
                         var newCAPublic = new X509Certificate2(newCA.RawData);
                         CertificateUtils.InstallCertificate(newCAPublic, "Root");
