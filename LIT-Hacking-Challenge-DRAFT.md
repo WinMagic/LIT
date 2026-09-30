@@ -105,7 +105,7 @@ To help participants start testing immediately, we provide prebuilt LIT client b
 
 Using these binaries eliminates the need to compile the LIT source code or configure a local build environment before beginning the challenge. Participants can download the supplied package, complete the required setup, and connect to the synthetic LIT Service Provider.
 
-This challenge is intended as a lightweight version of the broader SP1 scenario discussed internally. Participants can begin evaluating the mTLS protection without downloading, installing, and configuring the full SD/ME client environment.
+This challenge is intended as a lightweight version of the broader SP1/SP2 scenarios [TODO: add the link]. Participants can begin evaluating the mTLS protection without downloading, installing, and configuring the full SD/ME client environment.
 
 The prebuilt binaries are built from the source code available in this repository. Researchers who wish to go deeper may still build the project from source, modify the client, evaluate the complete environment, and perform broader security analysis.
 
