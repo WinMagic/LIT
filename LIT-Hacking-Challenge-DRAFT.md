@@ -109,7 +109,7 @@ This challenge is intended as a lightweight version of the broader SP1/SP2 scena
 
 The prebuilt binaries are built from the source code available in this repository. Researchers who wish to go deeper may still build the project from source, modify the client, evaluate the complete environment, and perform broader security analysis.
 
-Downloads and setup instructions:
+### Installation and configuration:
 
 * **Prebuilt binaries:** [https://github.com/WinMagic/LIT/tree/main/Windows/client/binaries/x64]										
 
@@ -118,8 +118,7 @@ SHA256 hash of LiveKeyEngine.exe:
 
 SHA256 hash of WmKsp.dll:
 e2651cc6ddb1f3104be98851eeb14c7a3ba86b233554a8102dcd4cb8bdcaa332
-				
-### Installation and configuration:
+
 
 **Install the Live Key Engine (Service)**
 
