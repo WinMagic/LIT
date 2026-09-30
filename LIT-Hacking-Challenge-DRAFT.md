@@ -18,6 +18,8 @@ The challenge environment is hosted on an Amazon EC2 instance owned and operated
 
 The objective of the challenge is to determine whether an attacker can defeat the mTLS protection and modify another test user's task list without possessing or legitimately using that user's LiveKey private key.
 
+Client registration is performed through a separate, unprotected REST API that is intentionally provided to simplify challenge setup and onboarding. Participants may use this API to register their own test clients and keys. The registration process itself is not considered a security boundary and is not part of the challenge scope. The objective of the challenge begins after a client's public key has been successfully registered with the Service Provider.  
+
 ### What Counts as a Successful Attack?
 
 A successful attack must demonstrate that an attacker can:
