@@ -1,0 +1,5 @@
+SHA256 hash of LiveKeyEngine.exe:
+22629d0802502bc05e0d0b86af8cd6ecae78db851fe7da446d27fc5634f8af1e
+
+SHA256 hash of WmKsp.dll:
+e2651cc6ddb1f3104be98851eeb14c7a3ba86b233554a8102dcd4cb8bdcaa332
