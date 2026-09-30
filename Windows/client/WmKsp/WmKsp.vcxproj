@@ -30,7 +30,7 @@
     <ClCompile Include="Tpm2CryptoProvider.cpp" />
     <ClCompile Include="WmKsp.cpp" />
     <ClCompile Include="WmKspHelper.cpp" />
-    <ClCompile Include="WmKspStoarge.cpp" />
+    <ClCompile Include="WmKspStorage.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CryptoProvider.h" />
