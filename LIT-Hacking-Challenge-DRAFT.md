@@ -113,7 +113,7 @@ The prebuilt binaries are built from the source code available in this repositor
 
 ### Installation and configuration:
 
-* **Prebuilt binaries:** \[https://github.com/WinMagic/LIT/tree/main/Windows/client/binaries/x64]
+* **Prebuilt binaries:** [https://github.com/WinMagic/LIT/tree/main/Windows/client/binaries/x64]
 
 SHA256 hash of LiveKeyEngine.exe:
 22629d0802502bc05e0d0b86af8cd6ecae78db851fe7da446d27fc5634f8af1e
