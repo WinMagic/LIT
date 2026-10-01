@@ -124,11 +124,11 @@ Any suspected vulnerability in an AWS service is outside this challenge and shou
 
 #### Prebuilt Binaries
 
-To help participants start testing immediately, we provide prebuilt LIT client binaries.
+To help participants start testing immediately, we provide prebuilt LIT client binaries for Microsoft Windows.
 
 Using these binaries eliminates the need to compile the LIT source code or configure a local build environment before beginning the challenge. Participants can download the supplied binaries, complete the required setup, and connect to the synthetic LIT Service Provider.
 
-This challenge is intended as a lightweight variation of the broader SP1 scenario. Participants can begin evaluating the direct mTLS protection without downloading, installing, and configuring the full SD/ME client environment. Researchers who want to go deeper may still build the project from source and separately participate in the full challenge under its applicable rules and participation terms.
+This challenge is intended as a lightweight variation of the broader scenario, which expected to be published soon. Participants can begin evaluating the direct mTLS protection without downloading, installing, and configuring the full SD/ME client environment. Researchers who want to go deeper may still build the project from source and separately participate in the full challenge under its applicable rules and participation terms.
 
 The prebuilt binaries are built from the source code available in this repository.
 
@@ -140,7 +140,7 @@ The package includes a DLL and a Windows service that require administrative pri
 
 Participants are responsible for reviewing and understanding the software and installation instructions before use. Participants should back up the test environment or create a virtual-machine snapshot before installation.
 
-Published binaries should be digitally signed and accompanied by SHA-256 checksums. Participants should verify both the digital signatures and published checksums before running the binaries.
+Participants should verify the published checksums before running the binaries.
 
 No indemnity is offered to participants through this README. Any warranties, liability limitations, governing law, dispute terms, disclosure obligations, or other binding terms are governed only by the applicable Participation Agreement or click-through terms.
 
@@ -197,7 +197,7 @@ Participants should install and run the challenge software only on systems they 
 
 After the WinMagic LiveKey Engine service and WinMagic CNG Key Storage Provider have been installed and registered, a LiveKey-backed cryptographic key will be created at the next Windows user logon.
 
-The client will then automatically generate a certificate request and submit it to the challenge server. If the request is accepted, the server will issue a client certificate. The certificate will be installed in the user's Windows certificate store and associated with the newly created key.
+The client will then automatically generate a certificate request and submit it to the Test server. If the request is accepted, the server will issue a client certificate. The certificate will be installed in the user's Windows certificate store and associated with the newly created key.
 
 This enrollment process exists solely to establish the initial trust relationship between the client and the Service Provider. Client registration, key creation, certificate enrollment, certificate issuance, and certificate installation are not challenge targets.
 
