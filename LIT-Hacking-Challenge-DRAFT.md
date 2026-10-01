@@ -14,11 +14,11 @@ The **LIT test server is a synthetic Service Provider** created specifically for
 
 Each test user has an independent task list containing synthetic test data only. The service does not contain production data, customer information, or confidential business information.
 
-The challenge environment is hosted on an Amazon EC2 instance owned and operated by WinMagic specifically for this challenge. AWS infrastructure and AWS-managed services are not part of the challenge scope. Testing is limited to the LIT Service Provider and associated challenge assets. 【1-f2231a】
+The challenge environment is hosted on an Amazon EC2 instance owned and operated by WinMagic specifically for this challenge. AWS infrastructure and AWS-managed services are not part of the challenge scope. Testing is limited to the LIT Service Provider and associated challenge assets. 
 
 The objective of the challenge is to determine whether an attacker can defeat the mTLS protection and modify another test user's task list without possessing or legitimately using that user's LiveKey private key.
 
-Client registration is performed through a separate, unprotected REST API that is intentionally provided to simplify challenge setup and onboarding. Participants may use this API to register their own test clients and keys. The registration process itself is not considered a security boundary and is not part of the challenge scope. The objective of the challenge begins after a client's public key has been successfully registered with the Service Provider.  
+Client registration is performed through a separate, unprotected REST API that is intentionally provided to simplify challenge setup and onboarding. Participants may use this API to register their own test clients and keys. The registration process itself is not considered a security boundary and is not part of the challenge scope. The objective of the challenge begins after a client's public key has been successfully registered with the Service Provider.
 
 ### What Counts as a Successful Attack?
 
@@ -82,7 +82,7 @@ Participants must not attempt to test, attack, disrupt, or assess:
 * Systems belonging to other AWS customers
 * Any assets not explicitly identified as part of this challenge
 
-This challenge is intended to evaluate the security of the LIT application and its mTLS-based authentication model, not the security of AWS. AWS permits penetration testing of customer-owned EC2 instances, but does not permit testing of AWS infrastructure or services themselves. 【1-f2231a】
+This challenge is intended to evaluate the security of the LIT application and its mTLS-based authentication model, not the security of AWS. AWS permits penetration testing of customer-owned EC2 instances, but does not permit testing of AWS infrastructure or services themselves. 
 
 The following activities are prohibited:
 
@@ -95,11 +95,11 @@ The following activities are prohibited:
 * Load, stress, or volumetric testing
 * Any activity intended to degrade the availability, performance, or stability of the challenge environment
 
-AWS identifies DoS, DDoS, request flooding, protocol flooding, and similar activities as prohibited penetration testing activities. 【1-f2231a】
+AWS identifies DoS, DDoS, request flooding, protocol flooding, and similar activities as prohibited penetration testing activities. 
 
 Participants must conduct their testing in a responsible manner and immediately stop any activity that could negatively impact service availability.
 
-Any vulnerability discovered in AWS services themselves is outside the scope of this challenge and should be reported directly to AWS through the AWS security reporting process. 【1-f2231a】
+Any vulnerability discovered in AWS services themselves is outside the scope of this challenge and should be reported directly to AWS through the AWS security reporting process. 
 
 ### Prebuilt Binaries
 
@@ -107,39 +107,41 @@ To help participants start testing immediately, we provide prebuilt LIT client b
 
 Using these binaries eliminates the need to compile the LIT source code or configure a local build environment before beginning the challenge. Participants can download the supplied package, complete the required setup, and connect to the synthetic LIT Service Provider.
 
-This challenge is intended as a lightweight version of the broader SP1/SP2 scenarios [TODO: add the link]. Participants can begin evaluating the mTLS protection without downloading, installing, and configuring the full SD/ME client environment.
+This challenge is intended as a lightweight version of the broader SP1/SP2 scenarios \[TODO: add the link]. Participants can begin evaluating the mTLS protection without downloading, installing, and configuring the full SD/ME client environment.
 
 The prebuilt binaries are built from the source code available in this repository. Researchers who wish to go deeper may still build the project from source, modify the client, evaluate the complete environment, and perform broader security analysis.
 
 ### Installation and configuration:
 
-* **Prebuilt binaries:** [https://github.com/WinMagic/LIT/tree/main/Windows/client/binaries/x64]										
+* **Prebuilt binaries:** \[https://github.com/WinMagic/LIT/tree/main/Windows/client/binaries/x64]
 
 SHA256 hash of LiveKeyEngine.exe:
 22629d0802502bc05e0d0b86af8cd6ecae78db851fe7da446d27fc5634f8af1e
 
 SHA256 hash of WmKsp.dll:
-e2651cc6ddb1f3104be98851eeb14c7a3ba86b233554a8102dcd4cb8bdcaa332
+6204f761c4fa2d65aa4412e7cd36a609f8a6970b7e68450393aa31e6a59ea939
+
 
 
 **Install the Live Key Engine (Service)**
 
-Copy LiveKeyEngine.exe to C:\Windows\System32 directoy  
+Copy LiveKeyEngine.exe to C:\\Windows\\System32 directoy  
 Launch Windows Command Prompt as Administrator  
-Execute  
+Execute
 
- sc.exe create LiveKeyEngine binPath="C:\Windows\System32\LiveKeyEngine.exe" start= auto  
- sc.exe start LiveKeyEngine  
+sc.exe create LiveKeyEngine binPath="C:\\Windows\\System32\\LiveKeyEngine.exe" start= auto  
+sc.exe start LiveKeyEngine
 
 **Install and Register WinMagic CNG Key Storage Provider**
 
-Copy WmKsp.dll to C:\Windows\System32 directoy  
+Copy WmKsp.dll to C:\\Windows\\System32 directoy  
 In the Administrator's command prompt  
 Execute
- 
- rundll32 "C:\Windows\System32\WmKsp.dll" Register  
 
- 
+rundll32 "C:\\Windows\\System32\\WmKsp.dll" Register
+
+
+
 Participants should verify the published SHA-256 checksum before running the downloaded binaries.
 
 Where available, participants should also verify the digital signature of the release package.
@@ -166,3 +168,4 @@ Do not publicly disclose a suspected vulnerability until WinMagic has had a reas
 Security claims should be tested, not merely asserted.
 
 This challenge is an invitation to independently examine the LIT design and reference implementation, identify weaknesses, and help improve the security of machine-native authentication.
+
