@@ -101,7 +101,7 @@ Participants must conduct their testing in a responsible manner and immediately 
 
 Any vulnerability discovered in AWS services themselves is outside the scope of this challenge and should be reported directly to AWS through the AWS security reporting process. 
 
-### Prebuilt Binaries
+### Prebuilt Binaries for Windows client
 
 To help participants start testing immediately, we provide prebuilt LIT client binaries.
 
