@@ -111,7 +111,7 @@ This challenge is intended as a lightweight version of the broader SP1/SP2 scena
 
 The prebuilt binaries are built from the source code available in this repository. Researchers who wish to go deeper may still build the project from source, modify the client, evaluate the complete environment, and perform broader security analysis.
 
-### Installation and configuration:
+### Installation and configuration on a Windows client:
 
 * **Prebuilt binaries:** [https://github.com/WinMagic/LIT/tree/main/Windows/client/binaries/x64]
 
