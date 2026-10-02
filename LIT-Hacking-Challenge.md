@@ -243,9 +243,9 @@ If a component cannot be removed cleanly, stop and restore the virtual-machine s
 
 #### Participation Terms
 
-Participation is voluntary and is subject to the current **Rules of Engagement** and **Participation Agreement** or approved click-through terms. Those binding terms must identify the participating legal entity and participant, applicable scope, liability provisions, governing law, disclosure requirements, and any approved safe-harbor language.
+Participation is voluntary and is subject to the current **Participation Agreement** or approved click-through terms. Those binding terms must identify the participating legal entity and participant, applicable scope, liability provisions, governing law, disclosure requirements, and any approved safe-harbor language.
 
-Before testing, participants must review and accept the applicable terms through the registration or click-through process. If this README conflicts with those terms, the accepted Rules of Engagement and Participation Agreement control.
+Before testing, participants must review and accept the applicable terms through the registration or click-through process. If this README conflicts with those terms, the accepted Participation Agreement control.
 
 By participating, you agree to:
 
@@ -280,7 +280,7 @@ Please report potential vulnerabilities privately to:
 
 **research@winmagic.com**
 
-Do not publicly disclose a suspected vulnerability before the disclosure deadline and process specified in the accepted Rules of Engagement or Participation Agreement. If no deadline has been specified, contact WinMagic for written disclosure instructions before publishing any details.
+Do not publicly disclose a suspected vulnerability before the disclosure deadline and process specified in the accepted Participation Agreement. If no deadline has been specified, contact WinMagic for written disclosure instructions before publishing any details.
 
 #### A Challenge, Not a Promise
 
