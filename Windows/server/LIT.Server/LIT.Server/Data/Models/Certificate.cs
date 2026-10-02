@@ -21,6 +21,11 @@ namespace LIT.ServerMVC.Data.Models
         public static string RSAEncryptionOid = "1.2.840.113549.1.1.";
         public static string ECCEncryptionOid = "1.2.840.10045.";
 
+        public static string CommonNameOid = "2.5.4.3";
+        public static string LocalityOid = "2.5.4.7";
+        public static string StateOid = "2.5.4.8";
+        public static string TitleOid = "2.5.4.12";
+
         public string UserName;
         public string DeviceUniqueId;
         public string Provider;

@@ -40,76 +40,58 @@ namespace LIT.ServerMVC.Controllers
                 if (model?.Request == Constants.RegisterKey)
                 {
                     logger.LogInformation($"Request Type: {Constants.RegisterKey}, Username: {model?.Username}, IP Address: {ipAddress}");
-                    if (String.IsNullOrEmpty(model.DeviceName) || String.IsNullOrEmpty(model.Username) || String.IsNullOrEmpty(model.PubKey))
+                    if (String.IsNullOrEmpty(model.DeviceName) || String.IsNullOrEmpty(model.Username) || String.IsNullOrEmpty(model.PubKey) || String.IsNullOrEmpty(model.KeyUsage))
                         throw new Exception();
 
                     var password = String.IsNullOrEmpty(model.Password) ? model.Username : model.Password;
                     var hashedPassword = Utils.HashPassword(password);
 
-                    var user = await dbContext.Users.FirstOrDefaultAsync(u => u.UserName == model.Username);
-                    var device = await dbContext.Devices.FirstOrDefaultAsync(d => d.DeviceName == model.DeviceName);
-                    if (user == null)
-                    {
-                        //create User
-                        user = new User
-                        {
-                            UserId = new Guid(),
-                            UserName = model.Username,
-                            Password = hashedPassword,
-                        };
+                    await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
-                        dbContext.Users.Add(user);
-                        await dbContext.SaveChangesAsync(cancellationToken);
-                    }
-                    //if username exist, update record
-                    else
-                    {
-                        user.UserName = model.Username;
-                        user.Password = hashedPassword;
-                    }
+                    var pubKey = Convert.FromBase64String(model.PubKey);
+                    var keyRegistration = await dbContext.KeyRegistrations.Include(k => k.User)
+                        .Include(k => k.Device)
+                        .FirstOrDefaultAsync(k => k.PublicKey == pubKey, cancellationToken);
 
-                    if (device == null)
-                    {
-                        //create Device
-                        device = new Device
-                        {
-                            DeviceId = new Guid(),
-                            DeviceName = model.DeviceName
-                        };
-
-                        dbContext.Devices.Add(device);
-                        await dbContext.SaveChangesAsync(cancellationToken);
-                    }
-                    //if devicename exist, update record
-                    else
-                    {
-                        device.DeviceName = model.DeviceName;
-                    }
-
-                    var keyRegistration = await dbContext.KeyRegistrations.FirstOrDefaultAsync(k => k.UserId == user.UserId && k.DeviceId == device.DeviceId);
+                    var isNewKey = keyRegistration == null;
 
                     if (keyRegistration != null)
                     {
-                        keyRegistration.PublicKey = Convert.FromBase64String(model.PubKey);
-                        keyRegistration.KeyType = model.KeyType ?? 0;
-                        keyRegistration.KeyUsage = model.KeyUsage;
+                        keyRegistration.User.UserName = model.Username;
+                        keyRegistration.Device.DeviceName = model.DeviceName;
                     }
                     else
                     {
-                        var key = new KeyRegistration
+                        var user = new User
+                        {
+                            UserId = Guid.NewGuid(),
+                            UserName = model.Username,
+                            Password = hashedPassword
+                        };
+
+                        var device = new Device
+                        {
+                            DeviceId = Guid.NewGuid(),
+                            DeviceName = model.DeviceName
+                        };
+
+                        keyRegistration = new KeyRegistration
                         {
                             UserId = user.UserId,
                             DeviceId = device.DeviceId,
-                            PublicKey = Convert.FromBase64String(model.PubKey),
+                            PublicKey = pubKey,
                             KeyType = model.KeyType ?? 0,
                             KeyUsage = model.KeyUsage
                         };
 
-                        dbContext.KeyRegistrations.Add(key);
+                        dbContext.Users.Add(user);
+                        dbContext.Devices.Add(device);
+                        dbContext.KeyRegistrations.Add(keyRegistration);
                     }
 
                     await dbContext.SaveChangesAsync(cancellationToken);
-                    logger.LogInformation($"Request Type: {Constants.RegisterKey}, Username: {model?.Username}, IP Address: {ipAddress}, Status: Successful");
+                    await transaction.CommitAsync(cancellationToken);
+                    logger.LogInformation($"Request Type: {Constants.RegisterKey}, Username: {model?.Username}, UserId: {keyRegistration.UserId}, Registration: {(isNewKey ? "New" : "Updated")}, IP Address: {ipAddress}, Status: Successful");
                     return new ClientRequestResponseDto
                     {
                         Status = "201",
@@ -159,14 +141,14 @@ namespace LIT.ServerMVC.Controllers
                         if (user == null || device == null)
                             throw new Exception();
 
-                        logger.LogInformation($"Request Type: {Constants.GetClientRequest}, Username: {user.UserName}, IP Address: {ipAddress}");
+                        logger.LogInformation($"Request Type: {Constants.GetClientRequest}, Username: {user.UserName}, UserId: {user.UserId}, IP Address: {ipAddress}");
 
                         var cert = GenerateAndSignClientCert(user, device, key.KeyUsage, issuer, model.PubKey);
 
                         key.DateModified = DateTime.UtcNow;
                         key.Thumbprint = cert.Thumbprint;
                         await dbContext.SaveChangesAsync(cancellationToken);
-                        logger.LogInformation($"Request Type: {Constants.GetClientRequest}, Username: {user.UserName}, IP Address: {ipAddress}, Status: Successful");
+                        logger.LogInformation($"Request Type: {Constants.GetClientRequest}, Username: {user.UserName}, UserId: {user.UserId}, IP Address: {ipAddress}, Status: Successful");
                         return new ClientRequestResponseDto
                         {
                             Status = "200",
@@ -196,9 +178,9 @@ namespace LIT.ServerMVC.Controllers
                     }
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                logger.LogInformation($"Request Type: {model?.Request}, IP Address: {ipAddress}, Status: Failed");
+                logger.LogInformation(ex, $"Request Type: {model?.Request}, IP Address: {ipAddress}, Status: Failed");
                 return new ClientRequestResponseDto
                 {
                     Status = "400",

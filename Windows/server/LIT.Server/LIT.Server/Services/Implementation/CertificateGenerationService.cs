@@ -26,6 +26,14 @@ namespace LIT.ServerMVC.Services.Implementation
     {
         List<string> ClientCertificateSupportedBlobFormats = new List<string> { "ECS1", "ECS3", "ECS5", "RSA1" };
 
+        private static readonly Dictionary<string, string> SubjectKeyOids = new Dictionary<string, string>
+        {
+            { "CN", Certificate.CommonNameOid },
+            { "L", Certificate.LocalityOid },
+            { "S", Certificate.StateOid },
+            { "T", Certificate.TitleOid }
+        };
+
         //example subjectKeyValuePair
         //Key: CN, Value: userName
         //Key: L, Value: deviceUniqueId
@@ -126,7 +134,7 @@ namespace LIT.ServerMVC.Services.Implementation
             if (!ClientCertificateSupportedBlobFormats.Contains(keyFormat))
                 throw new Exception("Key Format not supported");
 
-            var subjectFieldString = String.Join(", ", subjectKeyValuePair.Select(kv => String.Format("{0}={1}", kv.Key, kv.Value)));
+            var subjectName = BuildSubjectName(subjectKeyValuePair);
             HashAlgorithmName hashAlgorithmName = GetHashName(hashName);
 
             if (!caCertificate.PublicKey.Oid.Value.StartsWith(Certificate.RSAEncryptionOid) && !caCertificate.PublicKey.Oid.Value.StartsWith(Certificate.ECCEncryptionOid))
@@ -134,11 +142,11 @@ namespace LIT.ServerMVC.Services.Implementation
 
             if (keyFormat == "RSA1")
             {
-                return CreateRSACertificate(publicKeyBlob, subjectFieldString, hashAlgorithmName, caCertificate);
+                return CreateRSACertificate(publicKeyBlob, subjectName, hashAlgorithmName, caCertificate);
             }
             else
             {
-                return CreateECCCertificate(publicKeyBlob, subjectFieldString, hashAlgorithmName, caCertificate);
+                return CreateECCCertificate(publicKeyBlob, subjectName, hashAlgorithmName, caCertificate);
             }
         }
 
@@ -169,14 +177,13 @@ namespace LIT.ServerMVC.Services.Implementation
         /// </exception>
         public byte[] CreateClientCertificate(Dictionary<string, string> subjectKeyValuePair, X509Certificate2 caCertificate, Certificate.HashName hashName, Certificate.ECCCurves eccCurve)
         {
-            var subjectFieldString = String.Join(", ", subjectKeyValuePair.Select(kv => String.Format("{0}={1}", kv.Key, kv.Value)));
+            var subjectName = BuildSubjectName(subjectKeyValuePair);
             HashAlgorithmName hashAlgorithmName = GetHashName(hashName);
 
             ECCurve curve = GetCurveName(eccCurve);
             using (var ecc = ECDsa.Create(curve))
             {
-                var subjectField = new X500DistinguishedName(subjectFieldString);
-                var certRequest = new CertificateRequest(subjectField, ecc, hashAlgorithmName);
+                var certRequest = new CertificateRequest(subjectName, ecc, hashAlgorithmName);
 
                 var cert = CreateAndSignClientCertificate(caCertificate, certRequest, Certificate.ECCEncryptionOid);
                 cert = cert.CopyWithPrivateKey(ecc);
@@ -212,13 +219,12 @@ namespace LIT.ServerMVC.Services.Implementation
 
         public byte[] CreateClientCertificate(Dictionary<string, string> subjectKeyValuePair, X509Certificate2 caCertificate, Certificate.HashName hashName, Certificate.RSAKeySize keySize)
         {
-            var subjectFieldString = String.Join(", ", subjectKeyValuePair.Select(kv => String.Format("{0}={1}", kv.Key, kv.Value)));
+            var subjectName = BuildSubjectName(subjectKeyValuePair);
             HashAlgorithmName hashAlgorithmName = GetHashName(hashName);
 
             using (RSA rsa = RSA.Create((int)keySize))
             {
-                var subjectField = new X500DistinguishedName(subjectFieldString);
-                var certRequest = new CertificateRequest(subjectField, rsa, hashAlgorithmName, RSASignaturePadding.Pkcs1);
+                var certRequest = new CertificateRequest(subjectName, rsa, hashAlgorithmName, RSASignaturePadding.Pkcs1);
 
                 var cert = CreateAndSignClientCertificate(caCertificate, certRequest, Certificate.RSAEncryptionOid);
                 cert = cert.CopyWithPrivateKey(rsa);
@@ -226,24 +232,22 @@ namespace LIT.ServerMVC.Services.Implementation
             }
         }
 
-        private X509Certificate2 CreateRSACertificate(byte[] publicKeyBlob, string subjectFieldString, HashAlgorithmName hashAlgorithmName, X509Certificate2 caCertificate)
+        private X509Certificate2 CreateRSACertificate(byte[] publicKeyBlob, X500DistinguishedName subjectName, HashAlgorithmName hashAlgorithmName, X509Certificate2 caCertificate)
         {
             var cngKey = CngKey.Import(publicKeyBlob, CngKeyBlobFormat.GenericPublicBlob);
             using (RSA rsa = new RSACng(cngKey))
             {
-                var subjectField = new X500DistinguishedName(subjectFieldString);
-                var certRequest = new CertificateRequest(subjectField, rsa, hashAlgorithmName, RSASignaturePadding.Pkcs1);
+                var certRequest = new CertificateRequest(subjectName, rsa, hashAlgorithmName, RSASignaturePadding.Pkcs1);
                 return CreateAndSignClientCertificate(caCertificate, certRequest, Certificate.RSAEncryptionOid);
             }
         }
 
-        private X509Certificate2 CreateECCCertificate(byte[] publicKeyBlob, string subjectFieldString, HashAlgorithmName hashAlgorithmName, X509Certificate2 caCertificate)
+        private X509Certificate2 CreateECCCertificate(byte[] publicKeyBlob, X500DistinguishedName subjectName, HashAlgorithmName hashAlgorithmName, X509Certificate2 caCertificate)
         {
             var cngKey = CngKey.Import(publicKeyBlob, CngKeyBlobFormat.EccPublicBlob);
             using (ECDsa ecc = new ECDsaCng(cngKey))
             {
-                var subjectField = new X500DistinguishedName(subjectFieldString);
-                var certRequest = new CertificateRequest(subjectField, ecc, hashAlgorithmName);
+                var certRequest = new CertificateRequest(subjectName, ecc, hashAlgorithmName);
                 return CreateAndSignClientCertificate(caCertificate, certRequest, Certificate.ECCEncryptionOid);
             }
         }
@@ -288,6 +292,19 @@ namespace LIT.ServerMVC.Services.Implementation
                 }
                 else { throw new Exception("CA Certificate key type is not supported"); }
             }
+        }
+
+        private static X500DistinguishedName BuildSubjectName(Dictionary<string, string> subjectKeyValuePair)
+        {
+            var builder = new X500DistinguishedNameBuilder();
+            foreach (var kv in subjectKeyValuePair.Reverse())
+            {
+                if (!SubjectKeyOids.TryGetValue(kv.Key, out var oid))
+                    throw new Exception($"Subject key {kv.Key} is not supported");
+
+                builder.Add(oid, kv.Value);
+            }
+            return builder.Build();
         }
 
         private HashAlgorithmName GetHashName(Certificate.HashName hashName)

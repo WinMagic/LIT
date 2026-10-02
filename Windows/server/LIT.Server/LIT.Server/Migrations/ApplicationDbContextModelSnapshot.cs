@@ -186,8 +186,7 @@ namespace LIT.ServerMVC.Migrations
 
                     b.HasKey("UserId");
 
-                    b.HasIndex("UserName")
-                        .IsUnique();
+                    b.HasIndex("UserName");
 
                     b.ToTable("Users");
                 });

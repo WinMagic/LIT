@@ -13,17 +13,20 @@
 * proprietary use, or support agreements, please contact WinMagic.
 */
 
+using LIT.ServerMVC.Commons;
 using LIT.ServerMVC.Data;
 using LIT.ServerMVC.Services;
 using LIT.ServerMVC.Services.Implementation;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using Serilog.Events;
 
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Verbose()
-    .MinimumLevel.Override("Microsoft", LogEventLevel.Fatal)
-    .MinimumLevel.Override("System", LogEventLevel.Fatal)
+    .MinimumLevel.Override("Microsoft", LogEventLevel.Error)
+    .MinimumLevel.Override("System", LogEventLevel.Error)
     .MinimumLevel.Override("Serilog", LogEventLevel.Fatal)
     .WriteTo.Console()
     .WriteTo.File(path: "logs/app-.log", rollingInterval: RollingInterval.Month, retainedFileCountLimit: 24, shared: true)
@@ -64,6 +67,25 @@ try
         o.ExpireTimeSpan = TimeSpan.FromMinutes(15);
         o.SlidingExpiration = true;
         //o.Cookie.HttpOnly = true;
+        o.Events = new CookieAuthenticationEvents
+        {
+            OnValidatePrincipal = async context =>
+            {
+                var boundCertHash = context.Principal?.FindFirst(Constants.ClientCertHashClaim)?.Value;
+                var clientCert = context.HttpContext.Connection.ClientCertificate;
+                var presentedCertHash = clientCert == null ? null : CertificateUtils.ComputeCertHash(clientCert);
+                if (!string.IsNullOrEmpty(boundCertHash) && presentedCertHash == boundCertHash)
+                {
+                    return;
+                }
+
+                var logger = context.HttpContext.RequestServices.GetRequiredService<ILoggerFactory>().CreateLogger("CookieCertificateBinding");
+                logger.LogInformation($"Login cookie rejected, not bound to the presented client certificate. Certificate presented: {clientCert != null}, IP Address: {context.HttpContext.Connection.RemoteIpAddress}");
+
+                context.RejectPrincipal();
+                await context.HttpContext.SignOutAsync("AppCookie");
+            }
+        };
     });
 
     builder.Services.AddAuthorization();
@@ -103,6 +125,10 @@ try
     app.Run();
 }
 catch (Exception ex)
+{
+    Log.Fatal(ex, "Application terminated unexpectedly");
+}
+finally
 {
     Log.CloseAndFlush();
 }

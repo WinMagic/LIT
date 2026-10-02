@@ -17,6 +17,7 @@ using LIT.ServerMVC.Commons;
 using LIT.ServerMVC.Data;
 using LIT.ServerMVC.Data.Models;
 using LIT.ServerMVC.Services;
+using LIT.ServerMVC.Services.Implementation;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -43,12 +44,15 @@ namespace LIT.ServerMVC.Controllers
                 {
                     var dictionary = await LoginWithCert(certificate);
                     TempData["Message"] = $"User: {dictionary["User"]}, Device: {dictionary["Device"]} has successfully logged in";
-                    logger.LogInformation($"User: {dictionary["User"]} has logged in using certificate IP Address: {ipAddress}");
+                    logger.LogInformation($"User: {dictionary["User"]}, UserId: {dictionary["UserId"]} has logged in using certificate IP Address: {ipAddress}");
+                    if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+                        return Redirect(returnUrl);
+
                     return RedirectToAction("Index", "TodoItem");
                 }
-                catch (Exception ex)
+                catch (CertificateLoginException ex)
                 {
-                    logger.LogInformation($"Attempt to login using certificate failed. IP Address: {ipAddress}");
+                    logger.LogInformation(ex, $"Attempt to login using certificate failed. IP Address: {ipAddress}");
                     ModelState.AddModelError(string.Empty, ex.Message);
                     return View();
                 }
@@ -95,9 +99,9 @@ namespace LIT.ServerMVC.Controllers
             {
                 certSubject = certificateValidationService.GetCertificateSubject(certificate);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                throw new Exception("Error getting certificate subject");
+                throw new CertificateLoginException("Error getting certificate subject", ex);
             }
 
 
@@ -106,13 +110,13 @@ namespace LIT.ServerMVC.Controllers
                 var IsUserGuidValid = Guid.TryParse(certSubject.UserIndex, out var userGuid);
                 var IsDeviceGuidValid = Guid.TryParse(certSubject.DeviceIndex, out var deviceGuid);
                 if (!IsUserGuidValid || !IsDeviceGuidValid)
-                    throw new Exception("Invalid Guids on certificate subject field");
+                    throw new CertificateLoginException("Invalid Guids on certificate subject field");
 
 
                 var user = await dbContext.Users.FirstOrDefaultAsync(u => u.UserId == userGuid);
                 var device = await dbContext.Devices.FirstOrDefaultAsync(d => d.DeviceId == deviceGuid);
                 if (user == null || device == null)
-                    throw new Exception("User or Device does not exist");
+                    throw new CertificateLoginException("User or Device does not exist");
 
                 var key = await dbContext.KeyRegistrations
                     .Where(k => k.UserId == userGuid && k.DeviceId == deviceGuid && k.KeyUsage == certSubject.Provider)
@@ -120,36 +124,46 @@ namespace LIT.ServerMVC.Controllers
                     .FirstOrDefaultAsync();
 
                 if (key == null)
-                    throw new Exception("Certificate registration does not exist");
+                    throw new CertificateLoginException("Certificate registration does not exist");
 
-                var IsKeyRegistered = CompareECCKeys(certificate.GetECDsaPublicKey(), key.PublicKey);
+
+                using var certEccKey = certificate.GetECDsaPublicKey();
+                if (certEccKey == null)
+                    throw new CertificateLoginException("Only ECC client certificates are currently supported");
+
+                var IsKeyRegistered = CompareECCKeys(certEccKey, key.PublicKey);
                 if (!IsKeyRegistered)
-                    throw new Exception("Certificate public key not registered");
+                    throw new CertificateLoginException("Certificate public key not registered");
 
                 var serverCACert = dbContext.ServerCerts.FirstOrDefault(sc => sc.Name == Constants.ServerCAName);
+                if (serverCACert == null)
+                    throw new CertificateLoginException("Server CA is not ready");
+
                 var caCert = new X509Certificate2(serverCACert.Value);
                 if (!certificateValidationService.ValidateClientCertificateX509Chain(certificate, caCert)
                     || !certificateValidationService.ValidateClientCertificateChain(certificate, caCert))
-                    throw new Exception("Certificate failed validation");
+                    throw new CertificateLoginException("Certificate failed validation");
 
-                await SignInUserAsync(user.UserId.ToString(), user.UserName);
+                await SignInUserAsync(user.UserId.ToString(), user.UserName, certificate);
                 var dictionary = new Dictionary<string, string>();
                 dictionary.Add("User", user.UserName);
+                dictionary.Add("UserId", user.UserId.ToString());
                 dictionary.Add("Device", device.DeviceName);
                 return dictionary;
             }
-            catch(Exception ex)
+            catch(Exception ex) when (ex is not CertificateLoginException)
             {
-                throw new Exception(ex.Message);
+                throw new CertificateLoginException("Certificate login failed. An unexpected error has occurred", ex);
             }
         }
 
-        private async Task SignInUserAsync(string userId, string username)
+        private async Task SignInUserAsync(string userId, string username, X509Certificate2 certificate)
         {
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, userId),
-                new Claim(ClaimTypes.Name, username)
+                new Claim(ClaimTypes.Name, username),
+                new Claim(Constants.ClientCertHashClaim, CertificateUtils.ComputeCertHash(certificate))
             };
 
             var claimsIdentity = new ClaimsIdentity(claims, authenticationType: "AppCookie");
@@ -172,5 +186,7 @@ namespace LIT.ServerMVC.Controllers
             var keyY = new ArraySegment<byte>(registeredKey, 8 + cbKey, cbKey).ToArray();
             return (keyX.SequenceEqual(certX) && keyY.SequenceEqual(certY));
         }
+
+        private sealed class CertificateLoginException(string message, Exception? innerException = null) : Exception(message, innerException);
     }
 }
