@@ -168,6 +168,14 @@ Purpose   : Logging verbosity (e.g., 1=ERROR, 2=INFO, 3=DEBUG)
 
 ---
 
+## LIT Hacking Challenge
+
+Think you can break it? The LIT Hacking Challenge provides a controlled environment for testing the security of the LIT authentication architecture. We welcome responsible security research and vulnerability reports.  
+Get started here: [LIT-Hacking-Challenge](./LIT-Hacking-Challenge.md)
+
+---
+
+
 ## Vision
 
 > “If you can help with relatively little effort and the impact is meaningful, then giving isn't a loss. It makes the world better for everyone.”  
