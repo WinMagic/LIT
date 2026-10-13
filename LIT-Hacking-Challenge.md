@@ -1,5 +1,7 @@
 ### LIT Hacking Challenge
 
+ver. 1.0
+
 #### Our Security Hypothesis
 
 We hypothesize that the direct connection between a LIT client and the LIT test server is resistant to Man-in-the-Middle (MitM) and Adversary-in-the-Middle (AiTM) attacks.
