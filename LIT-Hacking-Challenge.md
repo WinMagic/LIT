@@ -80,7 +80,7 @@ The following activities are outside scope:
 
 A successful submission must demonstrate that the attacker can defeat the intended mTLS protection and modify the target account's synthetic task list while operating solely from an authorized network and without compromising, controlling, or modifying the legitimate client device.
 
-Attacks involving endpoint compromise, malware, physical access, local key extraction, operating-system modification, reverse engineering, or client-side instrumentation may be valuable research, but they are outside this challenge and will not be considered successful challenge submissions.
+Reverse engineering is not prohibited; however, attacks that rely on reverse engineering, modification, or instrumentation of the legitimate client are outside the scope of the challenge and will not qualify as successful submissions.
 
 #### Authorized Testing Only
 
