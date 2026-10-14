@@ -147,8 +147,12 @@
     <ClInclude Include="Crypto.h" />
     <ClInclude Include="Json.h" />
     <ClInclude Include="Log.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="RestClient.h" />
     <ClInclude Include="Utils.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="LiveKeyEngine.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

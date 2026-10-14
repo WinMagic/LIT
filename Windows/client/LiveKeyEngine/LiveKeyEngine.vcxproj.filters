@@ -19,5 +19,9 @@
     <ClInclude Include="..\include\Tlv.h" />
     <ClInclude Include="Log.h" />
     <ClInclude Include="Conditions.h" />
+    <ClInclude Include="resource.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="LiveKeyEngine.rc" />
   </ItemGroup>
 </Project>
