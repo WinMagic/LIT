@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LIT.ServerMVC.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260311134958_InitialCreate")]
+    [Migration("20261001221312_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -174,8 +174,7 @@ namespace LIT.ServerMVC.Migrations
 
                     b.HasKey("UserId");
 
-                    b.HasIndex("UserName")
-                        .IsUnique();
+                    b.HasIndex("UserName");
 
                     b.ToTable("Users");
                 });

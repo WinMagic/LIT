@@ -1,5 +1,7 @@
 ### LIT Hacking Challenge
 
+ver. 1.1
+
 #### Our Security Hypothesis
 
 We hypothesize that the direct connection between a LIT client and the LIT test server is resistant to Man-in-the-Middle (MitM) and Adversary-in-the-Middle (AiTM) attacks.
@@ -78,7 +80,7 @@ The following activities are outside scope:
 
 A successful submission must demonstrate that the attacker can defeat the intended mTLS protection and modify the target account's synthetic task list while operating solely from an authorized network and without compromising, controlling, or modifying the legitimate client device.
 
-Attacks involving endpoint compromise, malware, physical access, local key extraction, operating-system modification, reverse engineering, or client-side instrumentation may be valuable research, but they are outside this challenge and will not be considered successful challenge submissions.
+Reverse engineering is not prohibited; however, attacks that rely on reverse engineering, modification, or instrumentation of the legitimate client are outside the scope of the challenge and will not qualify as successful submissions.
 
 #### Authorized Testing Only
 
@@ -134,7 +136,7 @@ The prebuilt binaries are built from the source code available in this repositor
 
 #### Software Notice
 
-The challenge software is provided **"as is"** for research, testing, and evaluation purposes, subject to the Participation Terms and any applicable click-through agreement.
+The challenge software is provided **"as is"** for research, testing, and evaluation purposes, subject to the Participation Terms.
 
 The package includes a DLL and a Windows service that require administrative privileges to install. Participants should install the software only on a dedicated test machine, virtual machine, or other non-production environment that they own or are explicitly authorized to use.
 
@@ -142,7 +144,7 @@ Participants are responsible for reviewing and understanding the software and in
 
 Participants should verify the published checksums before running the binaries.
 
-No indemnity is offered to participants through this README. Any warranties, liability limitations, governing law, dispute terms, disclosure obligations, or other binding terms are governed only by the applicable Participation Agreement or click-through terms.
+No indemnity is offered to participants through this README. Any warranties, liability limitations, governing law, dispute terms, disclosure obligations, or other binding terms are governed only by the applicable Participation Agreement.
 
 #### Installation and Configuration on a Windows client
 
@@ -243,9 +245,9 @@ If a component cannot be removed cleanly, stop and restore the virtual-machine s
 
 #### Participation Terms
 
-Participation is voluntary and is subject to the current **Rules of Engagement** and **Participation Agreement** or approved click-through terms. Those binding terms must identify the participating legal entity and participant, applicable scope, liability provisions, governing law, disclosure requirements, and any approved safe-harbor language.
+Participation is voluntary and is subject to the current **Participation Agreement**. Those binding terms must identify the participating legal entity and participant, applicable scope, liability provisions, governing law, disclosure requirements, and any approved safe-harbor language.
 
-Before testing, participants must review and accept the applicable terms through the registration or click-through process. If this README conflicts with those terms, the accepted Rules of Engagement and Participation Agreement control.
+Before testing, participants must review and accept the applicable terms through the registration. If this README conflicts with those terms, the accepted Participation Agreement control.
 
 By participating, you agree to:
 
@@ -259,7 +261,7 @@ By participating, you agree to:
 
 Nothing in this README authorizes access to any system, device, network, account, traffic, or data that is not explicitly in scope.
 
-Unless expressly stated in the accepted Participation Agreement, this README does not provide safe harbor from civil claims, criminal prosecution, or other legal consequences. Researchers who require safe-harbor protection should not begin testing unless the approved participation terms provide it.
+The Participation Agreement provides a safe harbor for good-faith testing carried out within its terms and this challenge description. The full terms are in clause 9 of the Participation Agreement.
 
 WinMagic may modify, suspend, or terminate the challenge in accordance with the applicable participation terms.
 
@@ -280,7 +282,7 @@ Please report potential vulnerabilities privately to:
 
 **research@winmagic.com**
 
-Do not publicly disclose a suspected vulnerability before the disclosure deadline and process specified in the accepted Rules of Engagement or Participation Agreement. If no deadline has been specified, contact WinMagic for written disclosure instructions before publishing any details.
+Do not publish or disclose a finding to any third party for 90 days from the date WinMagic receives your report, as set out in clause 8 of the Participation Agreement.
 
 #### A Challenge, Not a Promise
 

@@ -35,7 +35,7 @@ namespace LIT.ServerMVC.Data
             modelBuilder.Entity<User>(entity =>
             {
                 entity.HasKey(e => e.UserId);
-                entity.HasIndex(e => e.UserName).IsUnique();
+                entity.HasIndex(e => e.UserName);
                 //sql server database
                 //entity.Property(e => e.DateCreated).HasDefaultValueSql("GETUTCDATE()");
 

@@ -26,21 +26,27 @@ namespace LIT.ServerMVC.Services.Implementation
     {
         public Certificate GetCertificateSubject(X509Certificate2 clientCert)
         {
-            var certSubjectArray = clientCert.Subject.Split(',');
-            var userSubject = certSubjectArray.Where(a => a.Trim().StartsWith("CN")).Single();
-            var userName = userSubject.Split('=')[1].Trim();
-            var deviceSubject = certSubjectArray.Where(b => b.Trim().StartsWith("L")).Single();
-            var deviceUniqueId = deviceSubject.Split('=')[1].Trim();
-            var providerSubject = certSubjectArray.Where(c => c.Trim().StartsWith("S")).Single();
-            var provider = providerSubject.Split('=')[1].Trim();
-            var idsSubject = certSubjectArray.Where(d => d.Trim().StartsWith("T")).Single();
-            var ids = idsSubject.Split('=')[1].Trim().Split(new[] { ":" }, StringSplitOptions.RemoveEmptyEntries);
+            var attributes = new List<(string? Oid, string? Value)>();
+            foreach (var rdn in clientCert.SubjectName.EnumerateRelativeDistinguishedNames())
+            {
+                if (rdn.HasMultipleElements)
+                    throw new Exception("Unexpected attribute in certificate subject");
+
+                attributes.Add((rdn.GetSingleElementType().Value, rdn.GetSingleElementValue()));
+            }
+
+            string GetSingle(string oid) =>
+                attributes.Where(a => a.Oid == oid).Select(a => a.Value).Single() ?? throw new Exception("Empty attribute in certificate subject");
+
+            var ids = GetSingle(Certificate.TitleOid).Split(':');
+            if (ids.Length != 2)
+                throw new Exception("Invalid certificate subject attribute");
 
             Certificate certSubject = new Certificate
             {
-                UserName = userName,
-                DeviceUniqueId = deviceUniqueId,
-                Provider = provider,
+                UserName = GetSingle(Certificate.CommonNameOid),
+                DeviceUniqueId = GetSingle(Certificate.LocalityOid),
+                Provider = GetSingle(Certificate.StateOid),
                 UserIndex = ids[0],
                 DeviceIndex = ids[1]
             };

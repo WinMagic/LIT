@@ -21,5 +21,6 @@ namespace LIT.ServerMVC.Commons
         public const string GetClientRequest = "GetClientCertificate";
         public const string GetCARequest = "GetCACertificate";
         public const string ServerCAName = "Server CA";
+        public const string ClientCertHashClaim = "ClientCertHash";
     }
 }
