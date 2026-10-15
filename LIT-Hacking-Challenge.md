@@ -153,13 +153,13 @@ No indemnity is offered to participants through this README. Any warranties, lia
 SHA-256 checksum of `LiveKeyEngine.exe`:
 
 ```text
-22629d0802502bc05e0d0b86af8cd6ecae78db851fe7da446d27fc5634f8af1e
+afc9938ec3cf6970316dad02b5e5ce5fa46fc9bfa575caab61c0b66bd9dfa20e
 ```
 
 SHA-256 checksum of `WmKsp.dll`:
 
 ```text
-6204f761c4fa2d65aa4412e7cd36a609f8a6970b7e68450393aa31e6a59ea939
+fa88bd9aec6be045064f7a1c1f5836d99b6cd2922b42b00b4e123df06d5dd24e
 ```
 
 Participants should install and run the challenge software only on systems they own or are explicitly authorized to use. A virtual machine or dedicated test machine is strongly recommended.
