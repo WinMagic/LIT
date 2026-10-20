@@ -19,6 +19,7 @@ using LIT.ServerMVC.Data;
 using LIT.ServerMVC.Data.Models;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
+using LIT.ServerMVC.Commons;
 
 namespace LIT.ServerMVC.Controllers
 {
@@ -35,10 +36,22 @@ namespace LIT.ServerMVC.Controllers
         private string? GetUserId() => User.FindFirstValue(ClaimTypes.NameIdentifier);
 
         // GET: TodoItem
+        [AllowAnonymous]
         public async Task<IActionResult> Index()
         {
-            var todoItems = _context.TodoItems.Where(t => t.UserId == Guid.Parse(GetUserId())).Include(t => t.User);
-            return View(await todoItems.ToListAsync());
+            var isAuthenticated = User.Identity?.IsAuthenticated == true;
+            var model = new TodoIndexViewModel
+            {
+                IsHttps = Request.IsHttps,
+                CertificatePresented = HttpContext.Connection.ClientCertificate != null,
+                IsAuthenticated = isAuthenticated,
+                UserName = User.Identity?.Name,
+                DeviceName = User.FindFirstValue(Constants.DeviceNameClaim),
+                Tasks = isAuthenticated ? await _context.TodoItems.Where(t => t.UserId == Guid.Parse(GetUserId()))
+                .Include(t => t.User).ToListAsync() : new List<TodoItem>()
+            };
+            return View(model);
+
         }
 
         // GET: TodoItem/Details/5
@@ -159,6 +172,22 @@ namespace LIT.ServerMVC.Controllers
                 return RedirectToAction(nameof(Index));
             }
             return View(todoItem);
+        }
+
+        // POST: TodoItem/Toggle/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Toggle(int id)
+        {
+            var todo = await _context.TodoItems.FindAsync(id);
+            if(todo == null || !IsCurrentUserTodoItem(todo.UserId.ToString()))
+            {
+                return NotFound();
+            }
+
+            todo.IsCompleted = !todo.IsCompleted;
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));
         }
 
         // GET: TodoItem/Delete/5

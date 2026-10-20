@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LIT.ServerMVC.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20261001221312_InitialCreate")]
+    [Migration("20261020205800_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -162,10 +162,6 @@ namespace LIT.ServerMVC.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("LastName")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Password")
-                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<string>("UserName")

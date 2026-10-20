@@ -14,81 +14,142 @@
  along with this program. If not, see
 <http: //www.gnu.org/licenses />. *@
 
-@model IEnumerable<LIT.ServerMVC.Data.Models.TodoItem>
-
+@model LIT.ServerMVC.Data.Models.TodoIndexViewModel
 
 @{
-    ViewData["Title"] = "My Tasks";
+    ViewData["Title"] = Model.IsAuthenticated ? "My Tasks" : "Welcome";
 }
 
-<div class="container py-4">
 
-    @if (TempData["Message"] is string successMsg)
-    {
-        <div id="alert-message"
-             class="alert alert-success alert-dismissible fade show shadow-sm"
-             role="alert"
-             style="cursor: pointer;">
-            <i class="bi bi-check-circle-fill me-2"></i>
-            @successMsg
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    }
-
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="fw-bold">My Tasks</h2>
-        <a class="btn btn-primary px-4" href="/TodoItem/Create">
-            <i class="bi bi-plus-lg"></i> Add Task
-        </a>
-    </div>
-
-    @if (!Model.Any())
-    {
-        <div class="text-center text-muted py-5">
-            <h4>No tasks yet</h4>
-            <p>Create one to get started.</p>
-        </div>
-    }
-    else
-    {
-        <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">
-            @foreach (var item in Model)
+@if (!Model.IsAuthenticated)
+{
+    <section class="lit-hero">
+        <div class="lit-hero-text">
+            <h1>Welcome to the website of good cybersecurity!</h1>
+            <p class="lit-tagline">There's no login and no logout.</p>
+            <p class="lit-lead">Once you have registered and set up, this page will recognize you and your endpoint. 
+                Your endpoint uses cryptography to represent the identity "user + device", because you have logged in to your endpoint.</p>
+            <p class="lit-lead lit-strong">No one can use your page from another device.</p>
+            @if (Model.CertificatePresented)
             {
-                <div class="col">
-                    <div class="card shadow-sm border-0 h-100">
-                        <div class="card-body">
-                            <h5 class="card-title @(item.IsCompleted ? "text-decoration-line-through text-muted" : "")">
-                                @item.Title
-                            </h5>
+                <p class="lit-notice">A key was presented, but it isn't registered to a user on this site.</p>
+            }
+            <div class="lit-cta">
+                <a class="lit-btn" href="@SiteLinks.Value.AgentDownloadUrl">Try it: download the lightweight agent</a>
+            </div>
+        </div>
+        <partial name="_ConnectionPanel" model="Model" />
+    </section>
 
-                            <p class="card-title @(item.IsCompleted ? "text-decoration-line-through text-muted" : "")">
-                                @item.Description
-                            </p>
+    <section class="lit-section">
+        <h2>Other sites skip the login too. What's different?</h2>
+        <div class="lit-cards">
+            <div class="lit-card">
+                <span class="lit-label">Most sites: they remember you</span>
+                <p>Your browser keeps a cookie from the last login. Each visit, the site checks whether this still looks like you: same browser, usual place, usual habits.</p>
+                <p class="lit-strong">A copy of that cookie, on someone else's computer, can look like you too.</p>
+            </div>
+            <div class="lit-card lit-card-accent">
+                <span class="lit-label">This site: your device proves you</span>
+                <p>On every connection, your device proves you with its own key. The key works only on your device, and only while you are logged in to it.</p>
+                <p class="lit-strong">There is no authentication cookie to copy. Another computer has nothing to show.</p>
+            </div>
+        </div>
+    </section>
 
-                            <span class="badge @(item.IsCompleted ? "bg-success" : "bg-warning text-dark")">
-                                @(item.IsCompleted ? "Completed" : "Pending")
-                            </span>
-                        </div>
+    <section class="lit-section">
+        <h2>How to get your own page</h2>
+        <ol class="lit-steps">
+            <li>
+                <span class="lit-step-no">01</span>
+                <strong>Install the agent</strong>
+                <span class="lit-step-text">Lightweight, signed, with public hashes. <a href="@SiteLinks.Value.InstallStepsUrl">Installation steps</a></span>
+            </li>
+            <li>
+                <span class="lit-step-no">02</span>
+                <strong>Register once</strong>
+                <span class="lit-step-text">Your device's key is registered with this site, for you on this device. <a href="@SiteLinks.Value.EnrollmentStepsUrl">Key creation and Certificate enrollment</a></span>
+            </li>
+            <li>
+                <span class="lit-step-no">03</span>
+                <strong>Come back</strong>
+                <span class="lit-step-text">Open this address. Nothing to type</span>
+            </li>
+        </ol>
+    </section>
 
-                        <div class="card-footer bg-white border-0 d-flex justify-content-between">
-                            <a class="btn btn-outline-primary btn-sm" asp-action="Edit" asp-route-id="@item.Id">Edit</a>
-                            <a class="btn btn-outline-secondary btn-sm" asp-action="Details" asp-route-id="@item.Id">Details</a>
-                            <a class="btn btn-outline-danger btn-sm" asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+    <section class="lit-faq">
+        <div>
+            <h2>Where is the login?</h2>
+            <p>In the connection itself. Your device proves a key that stands for you, this device, 
+                and its current conditions. The handshake is the login; the connections is the session. No authentication cookie, no token.</p>
+        </div>
+        <div>
+            <h2>And the logout?</h2>
+            <p>Close all browser windows. then reopen this page. Your device would have to prove you again by using your key(certificate).</p>
+        </div>
+        <div>
+            <h2>Think you can get in anyway?</h2>
+            <p>That is the challenge. Change another test user's task list without that user's key, through the connection to this server. Reports to <a href="mailto:@SiteLinks.Value.ReportEmail">@SiteLinks.Value.ReportEmail</a>.</p>
+        </div>
+    </section>
+}
+else
+{
+    <section class="lit-hero">
+        <div class="lit-hero-text">
+            <div>
+                <h1>Welcome, @Model.UserName. Let's continue your work.</h1>
+                <p class="lit-subtle">You typed nothing. Your device proved you when this page opened.</p>
+                <div class="lit-tasks">
+                    <div class="lit-tasks-head">
+                        <h2>Your tasks</h2>
+                        <div class="lit-tasks-meta">
+                            <span>Synthetic test data</span>
+                            <a class="lit-btn lit-btn-sm" asp-action="Create"><i class="bi bi-plus-lg me-1"></i>Add task</a>
                         </div>
                     </div>
-                </div>
-            }
-        </div>
-    }
-</div>
+                @if (!Model.Tasks.Any())
+                {
+                    <p class="lit-empty">No tasks yet. Add one to get started.</p>
+                }
 
-<script>
-    (function () {
-        const alertEl = document.getElementById('alert-message');
-        if (!alertEl) return;
-        alertEl.addEventListener('click', function (e) {
-            const bsAlert = bootstrap.Alert.getOrCreateInstance(alertEl);
-            bsAlert.close();
-        }, { once: true });
-    })();
-</script>
+                @foreach (var item in Model.Tasks)
+                {
+                    <div class="lit-task @(item.IsCompleted ? "done" : "")">
+                        <form asp-action="Toggle" asp-route-id="@item.Id" method="post">
+                            <input type="checkbox" checked="@item.IsCompleted" onchange="this.form.submit()" aria-label="Completed: @item.Title" />
+                            <noscript><button type="submit" class="btn btn-link btn-sm p-0 ms-2">Toggle</button></noscript>
+                        </form>
+                        <div class="lit-task-text">
+                            <span class="lit-task-title">@item.Title</span>
+                            @if (!string.IsNullOrEmpty(item.Description))
+                            {
+                                <span class="lit-task-desc">@item.Description</span>
+                            }
+                        </div>
+                        <div class="lit-task-actions">
+                            <a asp-action="Details" asp-route-id="@item.Id">Details</a>
+                            <a asp-action="Edit" asp-route-id="@item.Id">Edit</a>
+                            <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                        </div>
+                    </div>
+                }
+                </div>
+            </div>
+        </div>
+        <partial name="_ConnectionPanel" model="Model" />
+    </section>
+
+    <section class="lit-faq">
+        <div>
+            <h2>Looking for logout?</h2>
+            <p>Close all browser windows. then reopen this page. Your device would have to prove you again by using your key(certificate).</p>
+        </div>
+        <div>
+            <h2>Try it from another computer</h2>
+            <p>Open this address anywhere else, You get the welcome page or signed in as a different identity if that device also has a registered key, 
+                because the key that proves you is on this device and nowhere else. </p>
+        </div>
+    </section>
+}

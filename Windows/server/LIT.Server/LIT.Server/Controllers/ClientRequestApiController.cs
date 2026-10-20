@@ -23,10 +23,12 @@ using LIT.ServerMVC.Data;
 using LIT.ServerMVC.Services;
 using LIT.ServerMVC.Services.Implementation;
 using static LIT.ServerMVC.Data.Models.Certificate;
+using Microsoft.AspNetCore.Authorization;
 
 namespace LIT.ServerMVC.Controllers
 {
     [ApiController]
+    [AllowAnonymous]
     [Route("api/v1/ClientRequest")]
     public class ClientRequestApiController(ApplicationDbContext dbContext, ICertificateGenerationService certificateGenerationService, ILogger<ClientRequestApiController> logger) : ControllerBase
     {
@@ -42,9 +44,6 @@ namespace LIT.ServerMVC.Controllers
                     logger.LogInformation($"Request Type: {Constants.RegisterKey}, Username: {model?.Username}, IP Address: {ipAddress}");
                     if (String.IsNullOrEmpty(model.DeviceName) || String.IsNullOrEmpty(model.Username) || String.IsNullOrEmpty(model.PubKey) || String.IsNullOrEmpty(model.KeyUsage))
                         throw new Exception();
-
-                    var password = String.IsNullOrEmpty(model.Password) ? model.Username : model.Password;
-                    var hashedPassword = Utils.HashPassword(password);
 
                     await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
@@ -66,7 +65,6 @@ namespace LIT.ServerMVC.Controllers
                         {
                             UserId = Guid.NewGuid(),
                             UserName = model.Username,
-                            Password = hashedPassword
                         };
 
                         var device = new Device

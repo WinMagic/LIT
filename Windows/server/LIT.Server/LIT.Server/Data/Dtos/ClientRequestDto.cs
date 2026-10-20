@@ -22,7 +22,6 @@ namespace LIT.ServerMVC.Data.Dtos
         public int? KeyType { get; set; }
         public string? PubKey { get; set; }
         public string? Username { get; set; }
-        public string? Password { get; set; }
         public string? DeviceName { get; set; }
     }
 

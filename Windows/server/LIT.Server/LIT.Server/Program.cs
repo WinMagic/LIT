@@ -17,11 +17,12 @@ using LIT.ServerMVC.Commons;
 using LIT.ServerMVC.Data;
 using LIT.ServerMVC.Services;
 using LIT.ServerMVC.Services.Implementation;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.Certificate;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using Serilog.Events;
+using System.Security.Cryptography.X509Certificates;
 
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Verbose()
@@ -54,44 +55,49 @@ try
     // API + MVC Controllers
     builder.Services.AddControllersWithViews();//.AddRazorRuntimeCompilation();
 
-    builder.Services.AddAuthentication(o =>
+    builder.Services.AddAuthorization(o =>
     {
-        o.DefaultAuthenticateScheme = "AppCookie";
-        o.DefaultChallengeScheme = "AppCookie";
-        o.DefaultSignInScheme = "AppCookie";
-    })
-    .AddCookie("AppCookie", o =>
-    {
-        o.LoginPath = "/Account/Login";
-        o.LogoutPath = "/Account/Logout";
-        o.ExpireTimeSpan = TimeSpan.FromMinutes(15);
-        o.SlidingExpiration = true;
-        //o.Cookie.HttpOnly = true;
-        o.Events = new CookieAuthenticationEvents
-        {
-            OnValidatePrincipal = async context =>
-            {
-                var boundCertHash = context.Principal?.FindFirst(Constants.ClientCertHashClaim)?.Value;
-                var clientCert = context.HttpContext.Connection.ClientCertificate;
-                var presentedCertHash = clientCert == null ? null : CertificateUtils.ComputeCertHash(clientCert);
-                if (!string.IsNullOrEmpty(boundCertHash) && presentedCertHash == boundCertHash)
-                {
-                    return;
-                }
-
-                var logger = context.HttpContext.RequestServices.GetRequiredService<ILoggerFactory>().CreateLogger("CookieCertificateBinding");
-                logger.LogInformation($"Login cookie rejected, not bound to the presented client certificate. Certificate presented: {clientCert != null}, IP Address: {context.HttpContext.Connection.RemoteIpAddress}");
-
-                context.RejectPrincipal();
-                await context.HttpContext.SignOutAsync("AppCookie");
-            }
-        };
+        o.FallbackPolicy = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build();
     });
 
-    builder.Services.AddAuthorization();
+    builder.Services.AddAuthentication(CertificateAuthenticationDefaults.AuthenticationScheme)
+        .AddCertificate(o =>
+        {
+            o.AllowedCertificateTypes = CertificateTypes.Chained;
+            o.RevocationMode = X509RevocationMode.NoCheck;
+            o.Events = new CertificateAuthenticationEvents
+            {
+                OnCertificateValidated = async context =>
+                {
+                    var authenticator = context.HttpContext.RequestServices.GetRequiredService<IClientCertificateAuthenticator>();
+                    var principal = await authenticator.AuthenticateAsync(context.ClientCertificate, context.Scheme.Name, context.HttpContext.Connection.RemoteIpAddress);
+                    if (principal == null)
+                    {
+                        context.Fail("Client certificate was not accepted");
+                        return;
+                    }
+
+                    context.Principal = principal;
+                    context.Success();
+                },
+                OnChallenge = context =>
+                {
+                    context.Response.Redirect($"{context.Request.PathBase}/");
+                    context.HandleResponse();
+                    return Task.CompletedTask;
+                }
+            };
+        })
+        .AddCertificateCache(o =>
+        {
+            o.CacheSize = 1024;
+            o.CacheEntryExpiration = TimeSpan.FromMinutes(2);
+        });
 
     builder.Services.AddSingleton<ICertificateGenerationService, CertificateGenerationService>();
     builder.Services.AddSingleton<ICertificateValidationService, CertificateValidationService>();
+    builder.Services.AddScoped<IClientCertificateAuthenticator, ClientCertificateAuthenticator>();
+    builder.Services.Configure<SiteLinkOptions>(builder.Configuration.GetSection(SiteLinkOptions.SectionName));
     var app = builder.Build();
 
     //automatic DB creation and migration
@@ -120,7 +126,7 @@ try
     app.MapControllers();
     app.MapControllerRoute(
         name: "default",
-        pattern: "{controller=Account}/{action=Login}/{id?}");
+        pattern: "{controller=TodoItem}/{action=Index}/{id?}");
 
     app.Run();
 }

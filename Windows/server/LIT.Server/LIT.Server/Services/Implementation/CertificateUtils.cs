@@ -67,10 +67,5 @@ namespace LIT.ServerMVC.Services.Implementation
                 return ca.Count > 0 ? ca[0] : null;
             }
         }
-
-        public static string ComputeCertHash(X509Certificate2 certificate)
-        {
-            return Convert.ToBase64String(certificate.GetCertHash(HashAlgorithmName.SHA256));
-        }
     }
 }

@@ -16,11 +16,6 @@
 using LIT.ServerMVC.Commons;
 using LIT.ServerMVC.Data;
 using LIT.ServerMVC.Data.Models;
-using LIT.ServerMVC.Services;
-using LIT.ServerMVC.Services.Implementation;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Net;
 using System.Security.Claims;
@@ -28,71 +23,36 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 
-namespace LIT.ServerMVC.Controllers
+namespace LIT.ServerMVC.Services.Implementation
 {
-    public class AccountController(ApplicationDbContext dbContext, ICertificateValidationService certificateValidationService, ILogger<AccountController> logger) : Controller
+    public class ClientCertificateAuthenticator(ApplicationDbContext dbContext, 
+        ICertificateValidationService certificateValidationService, 
+        ILogger<ClientCertificateAuthenticator> logger) : IClientCertificateAuthenticator
     {
-        [AllowAnonymous]
-        [HttpGet]
-        public async Task<IActionResult> Login(string? returnUrl = null, bool logoutWithCert = false, bool certLogin = false)
+        public async Task<ClaimsPrincipal?> AuthenticateAsync(X509Certificate2 certificate, string authenticationType, IPAddress? ipAddress)
         {
-            var certificate = HttpContext.Connection.ClientCertificate;
-            var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-            if (certificate != null && !logoutWithCert)
+            try
             {
-                try
+                var (user, device) = await ValidateCertificateAsync(certificate);
+                logger.LogInformation($"User: {user.UserName}, UserId: {user.UserId}, Device: {device.DeviceName} has authenticated using certificate. IP Address: {ipAddress}");
+
+                var claims = new List<Claim>
                 {
-                    var dictionary = await LoginWithCert(certificate);
-                    TempData["Message"] = $"User: {dictionary["User"]}, Device: {dictionary["Device"]} has successfully logged in";
-                    logger.LogInformation($"User: {dictionary["User"]}, UserId: {dictionary["UserId"]} has logged in using certificate IP Address: {ipAddress}");
-                    if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
-                        return Redirect(returnUrl);
+                    new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
+                    new Claim(ClaimTypes.Name, user.UserName),
+                    new Claim(Constants.DeviceNameClaim, device.DeviceName)
+                };
 
-                    return RedirectToAction("Index", "TodoItem");
-                }
-                catch (CertificateLoginException ex)
-                {
-                    logger.LogInformation(ex, $"Attempt to login using certificate failed. IP Address: {ipAddress}");
-                    ModelState.AddModelError(string.Empty, ex.Message);
-                    return View();
-                }
+                return new ClaimsPrincipal(new ClaimsIdentity(claims, authenticationType));
             }
-
-
-            if (User.Identity?.IsAuthenticated == true)
+            catch (CertificateLoginException ex)
             {
-
-                if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
-                    return Redirect(returnUrl);
-
-                return RedirectToAction("Index", "TodoItem");
+                logger.LogInformation(ex, $"Attempt to authenticate using certificate failed. IP Address: {ipAddress}");
+                return null;
             }
-
-            ViewBag.ReturnUrl = returnUrl;
-
-            if (certLogin && certificate == null)
-            {
-                logger.LogInformation($"Attempt to login using certificate failed, no client certificate presented. IP Address: {ipAddress}");
-                ModelState.AddModelError(string.Empty, "No client certificate was presented. Close all browser windows, then reopen this page and select your certificate when prompted.");
-            }
-
-            if (TempData.TryGetValue("LoginError", out var loginError) && loginError is string loginMsg && !string.IsNullOrEmpty(loginMsg))
-            {
-                ModelState.AddModelError(string.Empty, loginMsg);
-            }
-
-            return View();
         }
 
-        [HttpGet]
-        public async Task<IActionResult> Logout()
-        {
-            var logoutWithCert = HttpContext.Connection.ClientCertificate != null;
-            await HttpContext.SignOutAsync("AppCookie");
-            return RedirectToAction("Login", new { logoutWithCert });
-        }
-
-        private async Task<Dictionary<string, string>> LoginWithCert(X509Certificate2 certificate)
+        private async Task<(User user, Device device)> ValidateCertificateAsync(X509Certificate2 certificate)
         {
             var certSubject = new Certificate();
             try
@@ -103,7 +63,6 @@ namespace LIT.ServerMVC.Controllers
             {
                 throw new CertificateLoginException("Error getting certificate subject", ex);
             }
-
 
             try
             {
@@ -144,32 +103,12 @@ namespace LIT.ServerMVC.Controllers
                     || !certificateValidationService.ValidateClientCertificateChain(certificate, caCert))
                     throw new CertificateLoginException("Certificate failed validation");
 
-                await SignInUserAsync(user.UserId.ToString(), user.UserName, certificate);
-                var dictionary = new Dictionary<string, string>();
-                dictionary.Add("User", user.UserName);
-                dictionary.Add("UserId", user.UserId.ToString());
-                dictionary.Add("Device", device.DeviceName);
-                return dictionary;
+                return (user, device);
             }
-            catch(Exception ex) when (ex is not CertificateLoginException)
+            catch (Exception ex) when (ex is not CertificateLoginException)
             {
                 throw new CertificateLoginException("Certificate login failed. An unexpected error has occurred", ex);
             }
-        }
-
-        private async Task SignInUserAsync(string userId, string username, X509Certificate2 certificate)
-        {
-            var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.NameIdentifier, userId),
-                new Claim(ClaimTypes.Name, username),
-                new Claim(Constants.ClientCertHashClaim, CertificateUtils.ComputeCertHash(certificate))
-            };
-
-            var claimsIdentity = new ClaimsIdentity(claims, authenticationType: "AppCookie");
-            var principal = new ClaimsPrincipal(claimsIdentity);
-
-            await HttpContext.SignInAsync("AppCookie", principal);
         }
 
         private bool CompareECCKeys(ECDsa clientCertKey, byte[] registeredKey)

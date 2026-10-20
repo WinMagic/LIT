@@ -1,0 +1,62 @@
+﻿@model LIT.ServerMVC.Data.Models.TodoIndexViewModel
+
+<aside class="lit-panel" aria-label="This connection">
+    <div class="lit-panel-title">This connection, just now</div>
+    <div>TLS handshake ........ 
+        <span class="@(Model.IsHttps ? "ok" : "warn")">@(Model.IsHttps ? "done": "no (plain HTTP)")</span>
+    </div>
+    @if (Model.IsAuthenticated)
+    {
+        <div>LIT key presented .... 
+            <span class="ok">yes</span>
+        </div>
+        <div>key registered to .... 
+            <span class="ok">@Model.UserName + @Model.DeviceName</span>
+        </div>
+        <div>auth cookies ........ 
+            <span class="ok">none</span>
+        </div>
+        <div>you typed ........... 
+            <span class="ok">nothing</span>
+        </div>
+        <div class="lit-panel-note">
+            Open your browser's developer tools and look at this site's cookies. There is no authentication cookie to steal.
+        </div>
+    }
+    else if (Model.CertificatePresented)
+    {
+        <div>server asked for key . 
+            <span class="ok">yes</span>
+        </div>
+        <div>LIT key presented .... 
+            <span class="ok">yes</span>
+        </div>
+        <div>key accepted ......... 
+            <span class="warn">no</span>
+        </div>
+        <div>auth cookie .......... 
+            <span class="warn">none</span>
+        </div>
+        <div class="lit-panel-note">
+            The key isn't registered to a user on this site, so you see this page.
+        </div>
+    }
+    else
+    {
+        <div>
+            server asked for key .
+            <span class="ok">yes</span>
+        </div>
+        <div>
+            LIT key presented ....
+            <span class="warn">none</span>
+        </div>
+        <div>
+            auth cookie ..........
+            <span class="warn">none</span>
+        </div>
+        <div class="lit-panel-note">
+            So you see this page. A registered endpoint would show the user's task list.
+        </div>
+    }
+</aside>
