@@ -23,6 +23,7 @@ std::string GetComputerNameUtf8();
 std::string GetUserNameUtf8();
 std::string GetLastWindowsErrorText();
 std::string GetWindowsErrorText(DWORD error);
+std::wstring GetUserNameWideString();
 
 std::wstring GetProcessImagePath(DWORD pid, DWORD flags = 0);
 
@@ -37,4 +38,9 @@ DWORD ReadServiceParameterDword(
     DWORD dwDefaultValue);
 
 std::wstring GetServiceName();
+
+DWORD CreateAndInstallSelfSignedEcdsaCert(
+    LPCWSTR subjectName,
+    LPCWSTR keyName);
+
 

@@ -13,13 +13,29 @@
 * proprietary use, or support agreements, please contact WinMagic.
 */
 
+#define SECURITY_WIN32
+
+//#pragma comment(lib, "crypt32.lib")
+//#pragma comment(lib, "ncrypt.lib")
+
+#define WINMAGIC_KSP_NAME L"WinMagic Key Provider"
+
+
+
 #include <windows.h>
 
 #include <string>
 #include <iostream>
 #include <vector>
+#include <wincrypt.h>
+#include <ncrypt.h>
+#include <bcrypt.h>
+#include <stdio.h>
+#include <wchar.h>
+
 
 #include "Utils.h"
+#include "Log.h"
 
 /*
  WideToUtf8:
@@ -31,7 +47,6 @@
  Notes:
   - Uses WideCharToMultiByte twice: first to compute required size,
     then to perform the actual UTF-16 --> UTF-8 conversion.
-  - Throws std::runtime_error on conversion failure.
 */
 std::string WideToUtf8(const std::wstring& w)
 {
@@ -42,7 +57,7 @@ std::string WideToUtf8(const std::wstring& w)
         nullptr, 0,
         nullptr, nullptr);
     if (len <= 0)
-        throw std::runtime_error("WideCharToMultiByte length failed");
+        return "";
 
     std::string s(len, '\0');
 
@@ -51,7 +66,7 @@ std::string WideToUtf8(const std::wstring& w)
         s.data(), len,
         nullptr, nullptr);
     if (written <= 0)
-        throw std::runtime_error("WideCharToMultiByte failed");
+        return "";
 
     return s;
 }
@@ -66,7 +81,6 @@ std::string WideToUtf8(const std::wstring& w)
  Notes:
   - Uses MultiByteToWideChar twice: first to obtain required size,
     then to perform the actual conversion.
-  - Throws std::runtime_error on allocation or conversion errors.
   - Returns an empty wide string if input is empty.
 */
 
@@ -74,12 +88,14 @@ static std::wstring Utf8ToWide(const std::string& s) {
     if (s.empty()) return L"";
 
     int len = MultiByteToWideChar(CP_UTF8, 0, s.data(), (int)s.size(), nullptr, 0);
-    if (len <= 0) throw std::runtime_error("Utf8ToWide: conversion size failed");
+    if (len <= 0) 
+        return L"";
 
     std::wstring w(len, L'\0');
     // Use &w[0] to get non-const writable pointer
     int written = MultiByteToWideChar(CP_UTF8, 0, s.data(), (int)s.size(), &w[0], len);
-    if (written <= 0) throw std::runtime_error("Utf8ToWide: conversion failed");
+    if (written <= 0) 
+        return L"";
 
     // Optional: resize in case 'written' < len (it usually equals len)
     if (written != len) w.resize(written);
@@ -95,7 +111,7 @@ std::string GetComputerNameUtf8()
 
     std::wstring wname(size, L'\0');
     if (!GetComputerNameW(wname.data(), &size))
-        throw std::runtime_error("GetComputerNameW failed");
+        return "";
 
     // Remove trailing null if present
     if (!wname.empty() && wname.back() == L'\0')
@@ -108,7 +124,30 @@ std::string GetComputerNameUtf8()
  GetComputerNameUtf8:
   Retrieves the local computer name using GetComputerNameW, trims any trailing
   null character, converts it from UTF-16 to UTF-8, and returns it as a
-  std::string. Throws std::runtime_error if the Windows API call fails.
+  std::string. 
+*/
+std::wstring GetUserNameWideString()
+{
+    DWORD size = 0;
+    // Query required size
+    GetUserNameW(nullptr, &size);
+
+    std::wstring wuser(size, L'\0');
+    if (!GetUserNameW(wuser.data(), &size))
+        return L"";
+
+    if (!wuser.empty() && wuser.back() == L'\0')
+        wuser.pop_back();
+
+    return wuser;
+}
+
+
+/*
+ GetComputerNameUtf8:
+  Retrieves the local computer name using GetComputerNameW, trims any trailing
+  null character, converts it from UTF-16 to UTF-8, and returns it as a
+  std::string. 
 */
 std::string GetUserNameUtf8()
 {
@@ -118,7 +157,7 @@ std::string GetUserNameUtf8()
 
     std::wstring wuser(size, L'\0');
     if (!GetUserNameW(wuser.data(), &size))
-        throw std::runtime_error("GetUserNameW failed");
+        return "";
 
     if (!wuser.empty() && wuser.back() == L'\0')
         wuser.pop_back();
@@ -414,4 +453,334 @@ std::wstring GetServiceName()
 
     CloseServiceHandle(hSCM);
     return result; // empty if no match found (e.g., not running as a service)
+}
+
+//------------
+
+BOOL IsEcdsaP256Key(
+    NCRYPT_KEY_HANDLE hKey)
+{
+    SECURITY_STATUS status;
+    DWORD bytesReturned = 0;
+    WCHAR algorithmName[128] = { 0 };
+
+    status = NCryptGetProperty(
+        hKey,
+        NCRYPT_ALGORITHM_PROPERTY,
+        (PBYTE)algorithmName,
+        sizeof(algorithmName),
+        &bytesReturned,
+        0);
+
+    if (status != ERROR_SUCCESS)
+    {
+        return FALSE;
+    }
+
+    if (_wcsicmp(
+        algorithmName,
+        NCRYPT_ECDSA_P256_ALGORITHM) != 0)
+    {
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+DWORD CreateAndInstallSelfSignedEcdsaCert(
+    LPCWSTR subjectName,
+    LPCWSTR keyName)
+{
+    SECURITY_STATUS dwStatus = (DWORD) -1;
+    BOOL newKeyCreated = FALSE;
+
+    NCRYPT_PROV_HANDLE hProvider = 0;
+    NCRYPT_KEY_HANDLE hKey = 0;
+
+    PCCERT_CONTEXT pCert = NULL;
+    HCERTSTORE hStore = NULL;
+
+    CERT_NAME_BLOB subjectBlob = { 0 };
+    BYTE* subjectEncoded = NULL;
+
+    SYSTEMTIME startTime;
+    SYSTEMTIME endTime;
+
+    CRYPT_KEY_PROV_INFO keyProvInfo = { 0 };
+    CRYPT_ALGORITHM_IDENTIFIER signatureAlgorithm = { 0 };
+
+    do 
+    {
+        if (!subjectName || !keyName)
+        {
+            dwStatus = ERROR_INVALID_PARAMETER;
+            break;
+        }
+
+		/*
+		 * Open WinMagic Key Provider.
+		 */
+        dwStatus = NCryptOpenStorageProvider(
+            &hProvider,
+            WINMAGIC_KSP_NAME,
+            0);
+
+        if (dwStatus)
+        {
+            LOGE("NCryptOpenStorageProvider failed, Status=0x%x", dwStatus);
+            break;
+        }
+
+        /*
+         * Create a persistent ECDSA P-256 key.
+         *
+         * The fifth parameter is zero because this is a native CNG key,
+         * not a legacy AT_SIGNATURE or AT_KEYEXCHANGE key.
+         */
+        dwStatus = NCryptCreatePersistedKey(
+            hProvider,
+            &hKey,
+            NCRYPT_ECDSA_P256_ALGORITHM,
+            keyName,
+            0,
+            0);
+
+        if (dwStatus == NTE_EXISTS)
+        {
+            LOGI("Key %s already exists", keyName);
+
+            /*
+             * The key already exists. Open and validate it.
+             */
+            dwStatus = NCryptOpenKey(
+                hProvider,
+                &hKey,
+                keyName,
+                0,
+                0);
+
+            if (dwStatus != ERROR_SUCCESS)
+            {
+                LOGE("NCryptOpenKey failed, Status=0x%x", dwStatus);
+                break;
+            }
+
+            if (!IsEcdsaP256Key(hKey))
+            {
+                LOGE("Not P256 key");
+                dwStatus = ERROR_NOT_SUPPORTED;
+                break;
+            }
+        }
+        else if (dwStatus != ERROR_SUCCESS)
+        {
+            LOGE("NCryptCreatePersistedKey failed, Status=0x%x", dwStatus);
+            break;
+        }
+        else
+        {
+            newKeyCreated = TRUE;
+
+            /*
+             * Provider-specific properties, such as PIN, usage policy,
+             * or security descriptor, can be set here before finalizing.
+             */
+
+            dwStatus = NCryptFinalizeKey(
+                hKey,
+                0);
+
+            if (dwStatus)
+            {
+                LOGE("NCryptFinalizeKey failed, Status=0x%x", dwStatus);
+                break;
+            }
+        }
+
+        /*
+         * Encode the X.500 subject.
+         *
+         *     L"CN=joe@abc.com"
+         */
+
+        WCHAR subject[256];
+        wsprintf(subject, L"CN=%s", subjectName);
+
+        if (!CertStrToNameW(
+            X509_ASN_ENCODING,
+            subject,
+            CERT_X500_NAME_STR,
+            NULL,
+            NULL,
+            &subjectBlob.cbData,
+            NULL))
+        {
+            dwStatus = GetLastError();
+            LOGE("CertStrToNameW failed, Status=0x%x", dwStatus);
+            break;
+        }
+
+        subjectEncoded = (BYTE*)LocalAlloc(
+            LPTR,
+            subjectBlob.cbData);
+
+        if (!subjectEncoded)
+        {
+            dwStatus = GetLastError();
+            LOGE("LocalAlloc failed, Status=0x%x", dwStatus);
+            break;
+        }
+
+        subjectBlob.pbData = subjectEncoded;
+
+        if (!CertStrToNameW(
+            X509_ASN_ENCODING,
+            subject,
+            CERT_X500_NAME_STR,
+            NULL,
+            subjectBlob.pbData,
+            &subjectBlob.cbData,
+            NULL))
+        {
+            dwStatus = GetLastError();
+            LOGE("CertStrToNameW failed, Status=0x%x", dwStatus);
+            break;
+        }
+
+        /*
+         * Certificate validity: one year.
+         */
+        GetSystemTime(&startTime);
+
+        endTime = startTime;
+        endTime.wYear += 1;
+
+        /*
+         * Associate the certificate with the persistent CNG key.
+         */
+        keyProvInfo.pwszContainerName =
+            (LPWSTR)keyName;
+
+        keyProvInfo.pwszProvName =
+            (LPWSTR)WINMAGIC_KSP_NAME;
+
+        keyProvInfo.dwProvType = 0;
+        keyProvInfo.dwFlags = 0;
+        keyProvInfo.cProvParam = 0;
+        keyProvInfo.rgProvParam = NULL;
+        keyProvInfo.dwKeySpec = CERT_NCRYPT_KEY_SPEC;
+
+        /*
+         * ECDSA with SHA-256 certificate signature.
+         *
+         * The AlgorithmIdentifier parameters must remain absent for ECDSA.
+         */
+        signatureAlgorithm.pszObjId =
+            const_cast<LPSTR>(szOID_ECDSA_SHA256);
+
+        signatureAlgorithm.Parameters.cbData = 0;
+        signatureAlgorithm.Parameters.pbData = NULL;
+
+        /*
+         * Create and sign the certificate using the WinMagic KSP key.
+         */
+        pCert = CertCreateSelfSignCertificate(
+            (HCRYPTPROV_OR_NCRYPT_KEY_HANDLE)hKey,
+            &subjectBlob,
+            0,
+            &keyProvInfo,
+            &signatureAlgorithm,
+            &startTime,
+            &endTime,
+            NULL);
+
+        if (!pCert)
+        {
+            dwStatus = GetLastError();
+            LOGE("CertCreateSelfSignCertificate failed, Status=0x%x", dwStatus);
+            break;
+        }
+
+        /*
+         * Open Current User\Personal.
+         */
+        hStore = CertOpenStore(
+            CERT_STORE_PROV_SYSTEM_W,
+            0,
+            0,
+            CERT_SYSTEM_STORE_CURRENT_USER,
+            L"MY");
+
+        if (!hStore)
+        {
+            dwStatus = GetLastError();
+            LOGE("CertOpenStore failed, Status=0x%x", dwStatus);
+            break;
+        }
+
+        /*
+         * Install the certificate.
+         */
+        if (!CertAddCertificateContextToStore(
+            hStore,
+            pCert,
+            CERT_STORE_ADD_REPLACE_EXISTING,
+            NULL))
+        {
+            dwStatus = GetLastError();
+            LOGE("CertAddCertificateContextToStore failed, Status=0x%x", dwStatus);
+            break;
+        }
+
+    } while (0);
+
+
+    /*
+     * Remove a newly created persistent key if a later operation failed.
+     * Do not delete an existing key that was merely opened.
+     */
+    if ((dwStatus != ERROR_SUCCESS) && newKeyCreated && hKey)
+    {
+        dwStatus = NCryptDeleteKey(
+            hKey,
+            0);
+
+        if (dwStatus)
+        {
+            LOGE("NCryptDeleteKey failed, Status=0x%x", dwStatus);
+            NCryptFreeObject(hKey);
+        }
+
+        /*
+         * NCryptDeleteKey releases the key handle when successful.
+         */
+        hKey = 0;
+    }
+
+    if (hStore)
+    {
+        CertCloseStore(hStore, 0);
+    }
+
+    if (pCert)
+    {
+        CertFreeCertificateContext(pCert);
+    }
+
+    if (hKey)
+    {
+        NCryptFreeObject(hKey);
+    }
+
+    if (hProvider)
+    {
+        NCryptFreeObject(hProvider);
+    }
+
+    if (subjectEncoded)
+    {
+        LocalFree(subjectEncoded);
+    }
+
+    return dwStatus;
 }

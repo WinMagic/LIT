@@ -114,43 +114,56 @@ DWORD SetupLiveKey()
             break;
         }
 
-		dwStatus = CreateKey(
-			LIVE_KEY_NAME,
-			BCRYPT_ECDSA_P256_ALGORITHM);
-		if (dwStatus)
-		{
+
+#ifdef USE_SELF_SIGNED_CERT
+
+        auto userName = GetUserNameWideString();
+        dwStatus = CreateAndInstallSelfSignedEcdsaCert(userName.c_str(), LIVE_KEY_NAME);
+        if (dwStatus)
+        {
+            LOGE("CreateAndInstallSelfSignedEcdsaCert failed, Status=0x%x", dwStatus);
+            break;
+        }
+
+#else
+
+        dwStatus = CreateKey(
+            LIVE_KEY_NAME,
+            BCRYPT_ECDSA_P256_ALGORITHM);
+        if (dwStatus)
+        {
             LOGE("CreateKey failed, Status=0x%x", dwStatus);
-			break;
-		}
-		DWORD dwPubKeyBlobSize;
+            break;
+        }
+        DWORD dwPubKeyBlobSize;
 
-		dwStatus = GetBCryptPublicKeyBlob(
-			LIVE_KEY_NAME,
-			NULL,
-			&dwPubKeyBlobSize);
-		if (dwStatus)
-		{
+        dwStatus = GetBCryptPublicKeyBlob(
+            LIVE_KEY_NAME,
+            NULL,
+            &dwPubKeyBlobSize);
+        if (dwStatus)
+        {
             LOGE("GetBCryptPublicKeyBlob failed, Status=0x%x", dwStatus);
             break;
-		}
+        }
 
-		pPubKey = new BYTE[dwPubKeyBlobSize];
-		if (!pPubKey)
-		{
-			dwStatus = ERROR_OUTOFMEMORY;
+        pPubKey = new BYTE[dwPubKeyBlobSize];
+        if (!pPubKey)
+        {
+            dwStatus = ERROR_OUTOFMEMORY;
             LOGE("No memory!");
-			break;
-		}
+            break;
+        }
 
-		dwStatus = GetBCryptPublicKeyBlob(
-			LIVE_KEY_NAME,
-			pPubKey,
-			&dwPubKeyBlobSize);
-		if (dwStatus)
-		{
+        dwStatus = GetBCryptPublicKeyBlob(
+            LIVE_KEY_NAME,
+            pPubKey,
+            &dwPubKeyBlobSize);
+        if (dwStatus)
+        {
             LOGE("GetBCryptPublicKeyBlob failed, Status=0x%x", dwStatus);
             break;
-		}
+        }
 
 		std::unordered_map<std::string, std::string> m;
         std::string respJson;
@@ -219,7 +232,7 @@ DWORD SetupLiveKey()
             LOGE("InstallCertificate failed, Status=0x%x", dwStatus);
             break;
         }
-
+#endif
 
 	} while (0);
 
@@ -318,6 +331,10 @@ DWORD WINAPI CtrlHandlerEx(DWORD ctrl, DWORD evtType, LPVOID evtData, LPVOID /*c
 {
     switch (ctrl)
     {
+    case 128:
+        SetupUserLiveKey();
+        return NO_ERROR;
+
     case SERVICE_CONTROL_STOP:
         ReportStatus(SERVICE_STOP_PENDING);
         if (gStopEvent) SetEvent(gStopEvent);
@@ -643,6 +660,8 @@ void WINAPI ServiceMain(DWORD /*argc*/, LPWSTR* /*argv*/)
         ReportStatus(SERVICE_STOPPED, GetLastError());
         return;
     }
+
+    SetupUserLiveKey();
 
     // Minimal wait loop
     WaitForSingleObject(gStopEvent, INFINITE);
