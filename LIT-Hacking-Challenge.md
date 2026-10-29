@@ -1,6 +1,6 @@
 ### LIT Hacking Challenge
 
-ver. 1.1
+ver. 1.2
 
 #### Our Security Hypothesis
 
@@ -153,13 +153,13 @@ No indemnity is offered to participants through this README. Any warranties, lia
 SHA-256 checksum of `LiveKeyEngine.exe`:
 
 ```text
-afc9938ec3cf6970316dad02b5e5ce5fa46fc9bfa575caab61c0b66bd9dfa20e
+213374d7990d6231bb130e2cff5c512acf868c137af69e294937392891804275
 ```
 
 SHA-256 checksum of `WmKsp.dll`:
 
 ```text
-fa88bd9aec6be045064f7a1c1f5836d99b6cd2922b42b00b4e123df06d5dd24e
+b1dda1474814a5684d64a5fd5884c1d8b6ec6ba46880bcc0758cd3148eb78aa7
 ```
 
 Participants should install and run the challenge software only on systems they own or are explicitly authorized to use. A virtual machine or dedicated test machine is strongly recommended.
